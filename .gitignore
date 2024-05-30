@@ -212,7 +212,7 @@ replay_pid*
 
 internal/config/application/custom.yaml
 
-local/secret*.yml
+var-local/secret*.yml
 internal/config/*.yml
 internal/config/*.yaml
 
