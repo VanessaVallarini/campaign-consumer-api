@@ -1,0 +1,105 @@
+# cluster settings
+
+appConfigFile:
+  enabled: true
+  data:
+   - volumeName: service-config
+     mountPath: /app/internal/config
+     fileName: configuration.yml
+     fileContent: |
+      app:
+        name: campaign-consumer-api
+      server:
+        host: 0.0.0.0:8080
+      meta:
+        host: 0.0.0.0:8081
+      database:
+          host: sandbox.com
+          port: 6432
+          username: campaign-consumer-api-app
+          database: campaign-consumer-api
+          conn:
+            min: 5
+            max: 10
+            lifetime: 120s
+            idletime: 120s
+      kafka-owner:
+        client-id: campaign-consumer-api
+        consumer-group-id: campaign-consumer-api
+        brokers:
+          - sandbox:9092
+        acks: all
+        timeout: 3m
+        use-authentication: true
+        enable-tls: true
+        enable-events: true
+        sasl-mechanism: SCRAM-SHA-512
+        retry-max: 35
+        topic: campaign.campaign-owner
+        subject: campaign.campaign-owner-value
+        schema-registry:
+          host: http://sandbox:8086
+      kafka-slug:
+        client-id: campaign-consumer-api
+        consumer-group-id: campaign-consumer-api
+        brokers:
+          - sandbox:9092
+        acks: all
+        timeout: 3m
+        use-authentication: true
+        enable-tls: true
+        enable-events: true
+        sasl-mechanism: SCRAM-SHA-512
+        retry-max: 35
+        topic: campaign.campaign-slug
+        subject: campaign.campaign-slug-value
+        schema-registry:
+          host: http://sandbox:8086
+      kafka-merchant:
+        client-id: campaign-consumer-api
+        consumer-group-id: campaign-consumer-api
+        brokers:
+          - sandbox:9092
+        acks: all
+        timeout: 3m
+        use-authentication: true
+        enable-tls: true
+        enable-events: true
+        sasl-mechanism: SCRAM-SHA-512
+        retry-max: 35
+        topic: campaign.campaign-merchant
+        subject: campaign.campaign-merchant-value
+        schema-registry:
+          host: http://sandbox:8086
+      kafka-campaign:
+        client-id: campaign-consumer-api
+        consumer-group-id: campaign-consumer-api
+        brokers:
+          - sandbox:9092
+        acks: all
+        timeout: 3m
+        use-authentication: true
+        enable-tls: true
+        enable-events: true
+        sasl-mechanism: SCRAM-SHA-512
+        retry-max: 35
+        topic: campaign.campaign
+        subject: campaign.campaign-value
+        schema-registry:
+          host: http://sandbox:8086
+      kafka-click-impression:
+        client-id: campaign-consumer-api
+        consumer-group-id: campaign-consumer-api
+        brokers:
+          - sandbox:9092
+        acks: all
+        timeout: 3m
+        use-authentication: true
+        enable-tls: true
+        enable-events: true
+        sasl-mechanism: SCRAM-SHA-512
+        retry-max: 35
+        topic: campaign.campaign-click-impression
+        subject: campaign.campaign-click-impression-value
+        schema-registry:
+          host: http://sandbox:8086
