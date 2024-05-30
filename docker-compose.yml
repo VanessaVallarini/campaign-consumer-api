@@ -1,0 +1,13 @@
+version: "3"
+services:
+  campaign-consumer-api-db:
+    image: campaign-consumer-api-db
+    container_name: campaign-consumer-api-db
+    ports:
+      - "5432:5432"
+    build: 
+      context: .
+      args:
+        - LOCAL_SQL=./scripts/postgres/local/sql
+        - MIGRATIONS_SQL=./scripts/postgres/migrations/sql
+      dockerfile: ./scripts/postgres/Dockerfile
