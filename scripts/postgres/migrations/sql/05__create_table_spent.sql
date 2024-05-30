@@ -1,4 +1,4 @@
-CREATE TABLE spent(
+CREATE TABLE IF NOT EXISTS spent(
     id UUID PRIMARY KEY NOT NULL,
     campaign_id  UUID NOT NULL,
     bucket VARCHAR(50) NOT NULL,

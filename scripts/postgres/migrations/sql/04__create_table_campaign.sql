@@ -1,7 +1,7 @@
-CREATE TABLE campaign(
+CREATE TABLE IF NOT EXISTS campaign(
     id  UUID PRIMARY KEY NOT NULL,
     merchant_id  UUID NOT NULL,
-    active BOOLEAN DEFAULT TRUE,
+    active BOOLEAN NOT NULL,
     lat FLOAT NOT NULL,
     long FLOAT NOT NULL,
     created_by VARCHAR(60),
