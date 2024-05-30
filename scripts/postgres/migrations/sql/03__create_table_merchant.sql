@@ -1,7 +1,7 @@
 CREATE TABLE merchant(
     id  UUID PRIMARY KEY NOT NULL,
     owner_id  UUID NOT NULL,
-    slugs UUID[],
+    slugs UUID[] NOT NULL,
     name   VARCHAR(50) NOT NULL,
     active BOOLEAN DEFAULT TRUE,
     created_by VARCHAR(60),

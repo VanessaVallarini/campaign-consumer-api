@@ -3,6 +3,7 @@ module github.com/VanessaVallarini/campaign-consumer-api
 go 1.21.4
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.18.2
 )
@@ -20,7 +21,6 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/ebitengine/purego v0.6.0-alpha.5 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/uuid v1.5.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
