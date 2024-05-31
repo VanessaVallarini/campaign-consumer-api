@@ -9,38 +9,36 @@ import (
 
 	"github.com/IBM/sarama"
 	easyzap "github.com/lockp111/go-easyzap"
-	"github.com/riferrei/srclient"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/client"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/config"
 )
 
-type MessageHandler func(message *sarama.ConsumerMessage, obj interface{}) error
+type MessageHandler func(message *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error
 
 type Consumer struct {
-	ready                chan bool
-	kafkaClient          sarama.Client
-	saramaClusterAdmin   sarama.ClusterAdmin
-	saramaConsumerGroup  sarama.ConsumerGroup
-	saramaConfig         *sarama.Config
-	schemaRegistryClient *srclient.SchemaRegistryClient
-	messageHandler       MessageHandler
-	obj                  interface{}
+	ready               chan bool
+	kafkaClient         sarama.Client
+	saramaClusterAdmin  sarama.ClusterAdmin
+	saramaConsumerGroup sarama.ConsumerGroup
+	saramaConfig        *sarama.Config
+	srClient            client.SchemaRegistryClient
+	messageHandler      MessageHandler
+	subject             string
 }
 
-func NewConsumer(ctx context.Context, brokerConfig config.KafkaConfig, obj interface{}, messageHandler MessageHandler) Consumer {
+func NewConsumer(ctx context.Context, brokerConfig config.KafkaConfig, srClient client.SchemaRegistryClient, messageHandler MessageHandler) Consumer {
 	kafkaClient, saramaClusterAdmin, saramaConsumerGroup, saramaConfig := client.NewKafkaClient(brokerConfig)
-	schemaRegistryClient := client.NewSchemaRegistry(brokerConfig)
 
 	return Consumer{
-		ready:                make(chan bool),
-		kafkaClient:          kafkaClient,
-		saramaClusterAdmin:   saramaClusterAdmin,
-		saramaConsumerGroup:  saramaConsumerGroup,
-		saramaConfig:         saramaConfig,
-		schemaRegistryClient: schemaRegistryClient,
-		messageHandler:       messageHandler,
-		obj:                  obj,
+		ready:               make(chan bool),
+		kafkaClient:         kafkaClient,
+		saramaClusterAdmin:  saramaClusterAdmin,
+		saramaConsumerGroup: saramaConsumerGroup,
+		saramaConfig:        saramaConfig,
+		srClient:            srClient,
+		messageHandler:      messageHandler,
+		subject:             brokerConfig.Subject,
 	}
 }
 
@@ -109,7 +107,7 @@ func (c Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama
 	for {
 		select {
 		case message := <-claim.Messages():
-			if err := c.messageHandler(message, c.obj); err != nil {
+			if err := c.messageHandler(message, c.srClient, c.subject); err != nil {
 				return err
 			}
 			session.MarkMessage(message, "")

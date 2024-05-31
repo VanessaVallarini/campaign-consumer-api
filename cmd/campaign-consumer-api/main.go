@@ -7,10 +7,10 @@ import (
 	"syscall"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/api"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/client"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/config"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/consumer"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/handler"
-	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/processor"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/repository"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/service"
@@ -53,7 +53,10 @@ func main() {
 	// handler
 	ownerHandler := handler.MakeOwnerEventHandler(ownerProcessor)
 
-	ownerConsumer := consumer.NewConsumer(ctx, cfg.KafkaOwner, model.Owner{}, ownerHandler)
+	// client
+	srClient := client.NewSchemaRegistry(cfg.KafkaOwner)
+
+	ownerConsumer := consumer.NewConsumer(ctx, cfg.KafkaOwner, srClient, ownerHandler)
 	go ownerConsumer.ConsumerStart(cfg.KafkaOwner)
 
 	// Start HTTP server
