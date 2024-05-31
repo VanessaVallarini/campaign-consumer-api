@@ -31,6 +31,7 @@ var upsertOwnerQuery = `
 	)
 	ON CONFLICT (id) DO UPDATE
 	SET
+		active = EXCLUDED.active,
 		email = EXCLUDED.email,
 		updated_by = EXCLUDED.updated_by,
 		updated_at = EXCLUDED.updated_at

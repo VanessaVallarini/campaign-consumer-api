@@ -2,14 +2,18 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/api"
-	"github.com/VanessaVallarini/campaign-consumer-api/internal/client"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/config"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/consumer"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/handler"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/processor"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/repository"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/service"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	easyzap "github.com/lockp111/go-easyzap"
@@ -36,32 +40,21 @@ func main() {
 		AllowMethods: []string{echo.GET, echo.HEAD, echo.PUT, echo.POST},
 	}))
 
-	// clients
-	kafkaOwnerClient := client.NewKafkaClient(ctx, cfg.KafkaOwner)
-	schemaRegistryOwnerClient := client.NewSchemaRegistry(cfg.KafkaOwner)
+	// repository
+	pool := repository.CreatePool(ctx, &cfg.Database)
+	ownerRepository := repository.NewOwnerRepository(pool)
 
-	kafkaSlugClient := client.NewKafkaClient(ctx, cfg.KafkaSlug)
-	schemaRegistrySlugClient := client.NewSchemaRegistry(cfg.KafkaSlug)
+	// service
+	ownerService := service.NewOwnerService(ownerRepository)
 
-	kafkaMerchantClient := client.NewKafkaClient(ctx, cfg.KafkaMerchant)
-	schemaRegistryMerchantClient := client.NewSchemaRegistry(cfg.KafkaMerchant)
+	// processor
+	ownerProcessor := processor.NewOwnerProcessor(ownerService)
 
-	kafkaCampaignClient := client.NewKafkaClient(ctx, cfg.KafkaCampaign)
-	schemaRegistryCampaignClient := client.NewSchemaRegistry(cfg.KafkaCampaign)
+	// handler
+	ownerHandler := handler.MakeOwnerEventHandler(ownerProcessor)
 
-	KafkaClickImpressionClient := client.NewKafkaClient(ctx, cfg.KafkaClickImpression)
-	schemaRegistryClickImpressionClient := client.NewSchemaRegistry(cfg.KafkaClickImpression)
-
-	fmt.Println(kafkaOwnerClient)
-	fmt.Println(schemaRegistryOwnerClient)
-	fmt.Println(kafkaSlugClient)
-	fmt.Println(schemaRegistrySlugClient)
-	fmt.Println(kafkaMerchantClient)
-	fmt.Println(schemaRegistryMerchantClient)
-	fmt.Println(kafkaCampaignClient)
-	fmt.Println(schemaRegistryCampaignClient)
-	fmt.Println(KafkaClickImpressionClient)
-	fmt.Println(schemaRegistryClickImpressionClient)
+	ownerConsumer := consumer.NewConsumer(ctx, cfg.KafkaOwner, model.Owner{}, ownerHandler)
+	go ownerConsumer.ConsumerStart(cfg.KafkaOwner)
 
 	// Start HTTP server
 	go func() {

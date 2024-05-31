@@ -29,7 +29,7 @@ func buildConnString(cfg *config.DatabaseConfig) string {
 }
 
 // CreatePool initializes and returns a new pgxpool.Pool using the given configuration.
-func CreatePool(ctx context.Context, cfg *config.DatabaseConfig) (*pgxpool.Pool, error) {
+func CreatePool(ctx context.Context, cfg *config.DatabaseConfig) *pgxpool.Pool {
 	connString := buildConnString(cfg)
 
 	poolConfig, err := pgxpool.ParseConfig(connString)
@@ -37,7 +37,7 @@ func CreatePool(ctx context.Context, cfg *config.DatabaseConfig) (*pgxpool.Pool,
 		err := errors.Wrapf(err, "Unable to parse config: %s", connString)
 		easyzap.Fatal(ctx, err, "unable to parse config")
 
-		return nil, err
+		return nil
 	}
 
 	pool, err := pgxDD.NewPoolWithConfig(ctx, poolConfig)
@@ -45,10 +45,10 @@ func CreatePool(ctx context.Context, cfg *config.DatabaseConfig) (*pgxpool.Pool,
 		err := errors.Wrapf(err, "Unable to create pool with config: %s", connString)
 		easyzap.Fatal(ctx, err, "nable to create pool with config")
 
-		return nil, err
+		return nil
 	}
 
 	easyzap.Info("database connection pool created successfully.")
 
-	return pool, nil
+	return pool
 }
