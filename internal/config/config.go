@@ -20,6 +20,7 @@ type Config struct {
 	Database             DatabaseConfig
 	KafkaOwner           KafkaConfig
 	KafkaSlug            KafkaConfig
+	KafkaRegion          KafkaConfig
 	KafkaMerchant        KafkaConfig
 	KafkaCampaign        KafkaConfig
 	KafkaClickImpression KafkaConfig
@@ -161,6 +162,28 @@ func GetConfig() Config {
 					Host:     viperCfg.GetString("kafka.schema-registry.host"),
 					User:     viperCfg.GetString("kafka-slug.schema-registry.user"),
 					Password: viperCfg.GetString("kafka-slug.schema-registry.password"),
+				},
+			},
+			KafkaRegion: KafkaConfig{
+				ClientId:          viperCfg.GetString("kafka.client-id"),
+				ConsumerGroupId:   viperCfg.GetString("kafka.consumer-group-id"),
+				Brokers:           viperCfg.GetStringSlice("kafka.brokers"),
+				Acks:              viperCfg.GetString("kafka.acks"),
+				Timeout:           viperCfg.GetDuration("kafka.timeout"),
+				UseAuthentication: viperCfg.GetBool("kafka.use-authentication"),
+				EnableTLS:         viperCfg.GetBool("kafka.enable-tls"),
+				EnableEvents:      viperCfg.GetBool("kafka.enable-events"),
+				SaslMechanism:     viperCfg.GetString("kafka.sasl-mechanism"),
+				User:              viperCfg.GetString("kafka-region.user"),
+				Password:          viperCfg.GetString("kafka-region.password"),
+				RetryMax:          viperCfg.GetInt("kafka.retry-max"),
+				Topic:             viperCfg.GetString("kafka-region.topic"),
+				Subject:           viperCfg.GetString("kafka-region.subject"),
+				BalanceStrategy:   sarama.NewBalanceStrategyRoundRobin(),
+				SchemaRegistryConfig: SchemaRegistryConfig{
+					Host:     viperCfg.GetString("kafka.schema-registry.host"),
+					User:     viperCfg.GetString("kafka-region.schema-registry.user"),
+					Password: viperCfg.GetString("kafka-region.schema-registry.password"),
 				},
 			},
 			KafkaMerchant: KafkaConfig{

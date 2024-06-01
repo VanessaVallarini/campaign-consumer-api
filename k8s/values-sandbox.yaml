@@ -43,6 +43,9 @@ appConfigFile:
       kafka-slug:
         topic: campaign.campaign-slug
         subject: campaign.campaign_slug_value
+      kafka-region:
+        topic: campaign.campaign-region
+        subject: campaign.campaign_region_value
       kafka-merchant:
         topic: campaign.campaign-merchant
         subject: campaign.campaign_merchant_value
