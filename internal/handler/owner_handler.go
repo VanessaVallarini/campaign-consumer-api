@@ -24,7 +24,7 @@ func MakeOwnerEventHandler(processor OwnerProcessor) func(msg *sarama.ConsumerMe
 		// Decode msg.Value into model.Owner
 		var owner model.OwnerEvent
 		if err := srClient.Decode(msg.Value, &owner, subject); err != nil {
-			easyzap.Error(err, "error during decode message consumer kafka on create account")
+			easyzap.Error(err, "error during decode message consumer kafka on create or update owner")
 
 			return err
 		}

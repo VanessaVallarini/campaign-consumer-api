@@ -43,21 +43,30 @@ func main() {
 	// repository
 	pool := repository.CreatePool(ctx, &cfg.Database)
 	ownerRepository := repository.NewOwnerRepository(pool)
+	slugRepository := repository.NewSlugRepository(pool)
 
 	// service
 	ownerService := service.NewOwnerService(ownerRepository)
+	slugService := service.NewSlugService(slugRepository)
 
 	// processor
 	ownerProcessor := processor.NewOwnerProcessor(ownerService)
+	slugProcessor := processor.NewSlugProcessor(slugService)
 
 	// handler
 	ownerHandler := handler.MakeOwnerEventHandler(ownerProcessor)
+	slugHandler := handler.MakeSlugEventHandler(slugProcessor)
 
 	// client
-	srClient := client.NewSchemaRegistry(cfg.KafkaOwner)
+	ownerSrClient := client.NewSchemaRegistry(cfg.KafkaOwner)
+	slugSrClient := client.NewSchemaRegistry(cfg.KafkaSlug)
 
-	ownerConsumer := consumer.NewConsumer(ctx, cfg.KafkaOwner, srClient, ownerHandler)
+	//consumer
+	ownerConsumer := consumer.NewConsumer(ctx, cfg.KafkaOwner, ownerSrClient, ownerHandler)
 	go ownerConsumer.ConsumerStart(cfg.KafkaOwner)
+
+	slugConsumer := consumer.NewConsumer(ctx, cfg.KafkaSlug, slugSrClient, slugHandler)
+	go slugConsumer.ConsumerStart(cfg.KafkaSlug)
 
 	// Start HTTP server
 	go func() {

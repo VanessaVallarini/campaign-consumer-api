@@ -19,7 +19,7 @@ func NewSlugRepository(pool *pgxpool.Pool) SlugRepository {
 }
 
 var upsertSlugQuery = `
-	INSERT INTO slug (id, name, active, created_by, updated_by, created_at, updated_at)
+	INSERT INTO slug (id, name, active, cost, created_by, updated_by, created_at, updated_at)
 	VALUES (
 		$1,
 		$2,
@@ -27,16 +27,20 @@ var upsertSlugQuery = `
 		$4,
 		$5,
 		$6,
-		$7
+		$7,
+		$8
 	)
 	ON CONFLICT (id) DO UPDATE
 	SET
-		email = EXCLUDED.name,
+		name = EXCLUDED.name,
+		active = EXCLUDED.active,
+		cost = EXCLUDED.cost,
 		updated_by = EXCLUDED.updated_by,
 		updated_at = EXCLUDED.updated_at
 	WHERE
-		slug.email <> EXCLUDED.name
-		OR slug.active <> EXCLUDED.active;
+		slug.name <> EXCLUDED.name
+		OR slug.active <> EXCLUDED.active
+		OR slug.cost <> EXCLUDED.cost;
 `
 
 func (s SlugRepository) Upsert(ctx context.Context, slug model.Slug) error {
@@ -46,6 +50,7 @@ func (s SlugRepository) Upsert(ctx context.Context, slug model.Slug) error {
 		slug.Id,
 		slug.Name,
 		slug.Active,
+		slug.Cost,
 		slug.CreatedBy,
 		slug.UpdatedBy,
 		slug.CreatedAt,
