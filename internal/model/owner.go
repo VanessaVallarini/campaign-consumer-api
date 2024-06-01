@@ -19,7 +19,7 @@ type Owner struct {
 type OwnerEvent struct {
 	Id        string `json:"id" avro:"id"`
 	Email     string `json:"email" avro:"email"`
-	Active    string `json:"active" avro:"active"`
+	Active    string `json:"active" avro:"active"` //conseguimos não usar apenas string?
 	CreatedBy string `json:"created_by" avro:"created_by"`
 	UpdatedBy string `json:"updated_by" avro:"updated_by"`
 }
