@@ -3,6 +3,7 @@ package processor
 import (
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
@@ -32,9 +33,11 @@ func (sp SlugProcessor) SlugProcessor(message model.SlugEvent) (returnErr error)
 		return
 	}
 
+	name := strings.ToUpper(message.Name)
+
 	sp.slugService.CreateOrUpdate(context.Background(), model.Slug{
 		Id:        uuid.MustParse(message.Id),
-		Name:      message.Name,
+		Name:      name,
 		Active:    active,
 		Cost:      message.Cost,
 		CreatedBy: message.CreatedBy,

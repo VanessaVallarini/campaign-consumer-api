@@ -45,26 +45,31 @@ func main() {
 	ownerRepository := repository.NewOwnerRepository(pool)
 	slugRepository := repository.NewSlugRepository(pool)
 	regionRepository := repository.NewRegionRepository(pool)
+	merchantRepository := repository.NewMerchantRepository(pool)
 
 	// service
 	ownerService := service.NewOwnerService(ownerRepository)
 	slugService := service.NewSlugService(slugRepository)
 	regionService := service.NewRegionService(regionRepository)
+	merchantService := service.NewMerchantService(merchantRepository)
 
 	// processor
 	ownerProcessor := processor.NewOwnerProcessor(ownerService)
 	slugProcessor := processor.NewSlugProcessor(slugService)
 	regionProcessor := processor.NewRegionProcessor(regionService)
+	merchantProcessor := processor.NewMerchantProcessor(merchantService)
 
 	// handler
 	ownerHandler := handler.MakeOwnerEventHandler(ownerProcessor)
 	slugHandler := handler.MakeSlugEventHandler(slugProcessor)
 	regionHandler := handler.MakeRegionEventHandler(regionProcessor)
+	merchantHandler := handler.MakeMerchantEventHandler(merchantProcessor)
 
 	// client
 	ownerSrClient := client.NewSchemaRegistry(cfg.KafkaOwner)
 	slugSrClient := client.NewSchemaRegistry(cfg.KafkaSlug)
 	regionSrClient := client.NewSchemaRegistry(cfg.KafkaRegion)
+	merchantSrClient := client.NewSchemaRegistry(cfg.KafkaMerchant)
 
 	//consumer
 	ownerConsumer := consumer.NewConsumer(ctx, cfg.KafkaOwner, ownerSrClient, ownerHandler)
@@ -75,6 +80,9 @@ func main() {
 
 	regionConsumer := consumer.NewConsumer(ctx, cfg.KafkaRegion, regionSrClient, regionHandler)
 	go regionConsumer.ConsumerStart(cfg.KafkaRegion)
+
+	merchantConsumer := consumer.NewConsumer(ctx, cfg.KafkaMerchant, merchantSrClient, merchantHandler)
+	go merchantConsumer.ConsumerStart(cfg.KafkaMerchant)
 
 	// Start HTTP server
 	go func() {

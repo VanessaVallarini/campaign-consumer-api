@@ -18,21 +18,9 @@ func NewMerchantRepository(pool *pgxpool.Pool) MerchantRepository {
 	}
 }
 
-const allMerchantFields = `
-	id, 
-	owner_id, 
-	slugs, 
-	name, 
-	active, 
-	created_by, 
-	updated_by, 
-	created_at, 
-	updated_at
-`
-
-var createMerchantQuery = `
-	INSERT INTO merchant (` + allMerchantFields + `
-	) VALUES (
+var upsertMerchantQuery = `
+	INSERT INTO merchant (id, owner_id, region_id, slugs, name, active, created_by, updated_by, created_at, updated_at)
+	VALUES (
 		$1,
 		$2,
 		$3,
@@ -41,16 +29,33 @@ var createMerchantQuery = `
 		$6,
 		$7,
 		$8,
-		$9
-	);
+		$9,
+		$10
+	)
+	ON CONFLICT (id) DO UPDATE
+	SET
+		owner_id = EXCLUDED.owner_id,
+		region_id = EXCLUDED.region_id,
+		slugs = EXCLUDED.slugs,
+		name = EXCLUDED.name,
+		active = EXCLUDED.active,
+		updated_by = EXCLUDED.updated_by,
+		updated_at = EXCLUDED.updated_at
+	WHERE
+		merchant.owner_id <> EXCLUDED.owner_id
+		OR merchant.region_id <> EXCLUDED.region_id
+		OR merchant.slugs <> EXCLUDED.slugs
+		OR merchant.name <> EXCLUDED.name
+		OR merchant.active <> EXCLUDED.active;
 `
 
-func (m MerchantRepository) Create(ctx context.Context, merchant model.Merchant) error {
+func (m MerchantRepository) Upsert(ctx context.Context, merchant model.Merchant) error {
 	_, err := m.pool.Exec(
 		ctx,
-		createMerchantQuery,
+		upsertMerchantQuery,
 		merchant.Id,
 		merchant.OwnerId,
+		merchant.RegionId,
 		merchant.Slugs,
 		merchant.Name,
 		merchant.Active,
@@ -61,30 +66,6 @@ func (m MerchantRepository) Create(ctx context.Context, merchant model.Merchant)
 	)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create merchant in database")
-	}
-
-	return nil
-}
-
-var updateMerchantQuery = `
-	UPDATE merchant
-	SET slugs=$2, "name"=$3, active=$4, updated_by=$5, updated_at=$6
-	WHERE id=$1;
-`
-
-func (m MerchantRepository) Update(ctx context.Context, merchant model.Merchant) error {
-	_, err := m.pool.Exec(
-		ctx,
-		updateMerchantQuery,
-		merchant.Id,
-		merchant.Slugs,
-		merchant.Name,
-		merchant.Active,
-		merchant.UpdatedBy,
-		merchant.UpdatedAt,
-	)
-	if err != nil {
-		return errors.Wrap(err, "Failed to update merchant in database")
 	}
 
 	return nil

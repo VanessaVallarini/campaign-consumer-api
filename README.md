@@ -27,11 +27,11 @@ curl --location 'http://localhost:8086/subjects/campaign.campaign_slug_value/ver
 }'
 ```
 
-# SEND MESSAGE OWNER 
+# SEND MESSAGE SLUG 
 ```shell
 {
 	"id": "550146ad-eaff-46e7-8388-b8f948740903",
-	"name": "van",
+	"name": "pizza",
 	"active": "true",
 	"cost": 0.55,
 	"created_by": "van",
@@ -51,12 +51,35 @@ curl --location 'http://localhost:8086/subjects/campaign.campaign_region_value/v
 # SEND MESSAGE REGION 
 ```shell
 {
-	"id": "550146ad-eaff-46e7-8388-b8f948740903",
+	"id": "e981913f-0c2a-4149-8f0b-548c14433d23",
 	"name": "Londrina",
 	"active": "true",
-	"lat": ,
-	"long": ,
+	"lat": -23.3212795,
+	"long": -51.165763,
 	"cost": 0.55,
+	"created_by": "van",
+	"updated_by": "van"
+}
+```
+
+# CREATE SCHEMA MERCHANT
+```shell
+curl --location 'http://localhost:8086/subjects/campaign.campaign_merchant_value/versions' \
+--header 'Content-Type: application/json' \
+--data '{
+    "schema": "{\"type\":\"record\",\"name\":\"merchant\",\"namespace\":\"campaign.campaign_merchant_value\",\"fields\":[{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"owner_id\",\"type\":\"string\"},{\"name\":\"region_id\",\"type\":\"string\"},{\"name\":\"slugs\",\"type\":{\"type\":\"array\",\"items\":\"string\"}},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"active\",\"type\":\"string\"},{\"name\":\"created_by\",\"type\":\"string\"},{\"name\":\"updated_by\",\"type\":\"string\"}]}]}"
+}'
+```
+
+# SEND MESSAGE MERCHANT 
+```shell
+{
+	"id": "ed48d4be-2e8e-4f58-82af-b568ec3e0097",
+	"owner_id": "7631fcd2-5722-47d9-86af-761b4ca16644",
+	"region_id": "e981913f-0c2a-4149-8f0b-548c14433d23",
+	"slugs": ["550146ad-eaff-46e7-8388-b8f948740903", "adb1363e-3f91-4683-9844-5f937b2b31d5"],
+	"name": "Pastelaria Promo",
+	"active": "true",
 	"created_by": "van",
 	"updated_by": "van"
 }

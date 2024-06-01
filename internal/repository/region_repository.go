@@ -42,7 +42,7 @@ var upsertRegionQuery = `
 		updated_by = EXCLUDED.updated_by,
 		updated_at = EXCLUDED.updated_at
 	WHERE
-		slug.name <> EXCLUDED.name
+		region.name <> EXCLUDED.name
 		OR region.active <> EXCLUDED.active
 		OR region.lat <> EXCLUDED.lat
 		OR region.long <> EXCLUDED.long
