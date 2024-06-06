@@ -6,28 +6,35 @@ import (
 	"github.com/google/uuid"
 )
 
+type RegionStatus string
+
+const (
+	ActiveRegion   RegionStatus = "ACTIVE"
+	InactiveRegion RegionStatus = "INACTIVE"
+)
+
 type Region struct {
-	Id        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Active    bool      `json:"active"`
-	Lat       float64   `json:"lat"`
-	Long      float64   `json:"long"`
-	Cost      float64   `json:"cost"`
-	CreatedBy string    `json:"created_by"`
-	UpdatedBy string    `json:"updated_by"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Id        uuid.UUID    `json:"id"`
+	Name      string       `json:"name"`
+	Status    RegionStatus `json:"status"`
+	Lat       float64      `json:"lat"`
+	Long      float64      `json:"long"`
+	Cost      float64      `json:"cost"`
+	CreatedBy string       `json:"created_by"`
+	UpdatedBy string       `json:"updated_by"`
+	CreatedAt time.Time    `json:"created_at"`
+	UpdatedAt time.Time    `json:"updated_at"`
 }
 
 type RegionEvent struct {
-	Id        string  `json:"id" avro:"id"`
-	Name      string  `json:"name" avro:"name"`
-	Active    string  `json:"active" avro:"active"` //conseguimos não usar apenas string?
-	Lat       float64 `json:"lat" avro:"lat"`
-	Long      float64 `json:"long" avro:"long"`
-	Cost      float64 `json:"cost" avro:"cost"`
-	CreatedBy string  `json:"created_by" avro:"created_by"`
-	UpdatedBy string  `json:"updated_by" avro:"updated_by"`
+	Id        string  `avro:"id"`
+	Name      string  `avro:"name"`
+	Status    string  `avro:"status"`
+	Lat       float64 `avro:"lat"`
+	Long      float64 `avro:"long"`
+	Cost      float64 `avro:"cost"`
+	CreatedBy string  `avro:"created_by"`
+	UpdatedBy string  `avro:"updated_by"`
 }
 
 const (
@@ -45,7 +52,7 @@ const (
 				"type":"string"
 			 },
 			 {
-				"name":"active",
+				"name":"status",
 				"type":"string"
 			 },
 			 {

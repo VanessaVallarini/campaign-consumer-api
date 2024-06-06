@@ -6,24 +6,31 @@ import (
 	"github.com/google/uuid"
 )
 
+type SlugStatus string
+
+const (
+	ActiveSlug   SlugStatus = "ACTIVE"
+	InactiveSlug SlugStatus = "INACTIVE"
+)
+
 type Slug struct {
-	Id        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Active    bool      `json:"active"`
-	Cost      float64   `json:"cost"`
-	CreatedBy string    `json:"created_by"`
-	UpdatedBy string    `json:"updated_by"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Id        uuid.UUID  `json:"id"`
+	Name      string     `json:"name"`
+	Status    SlugStatus `json:"status"`
+	Cost      float64    `json:"cost"`
+	CreatedBy string     `json:"created_by"`
+	UpdatedBy string     `json:"updated_by"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
 }
 
 type SlugEvent struct {
-	Id        string  `json:"id" avro:"id"`
-	Name      string  `json:"name" avro:"name"`
-	Active    string  `json:"active" avro:"active"` //conseguimos não usar apenas string?
-	Cost      float64 `json:"cost" avro:"cost"`
-	CreatedBy string  `json:"created_by" avro:"created_by"`
-	UpdatedBy string  `json:"updated_by" avro:"updated_by"`
+	Id        string  `avro:"id"`
+	Name      string  `avro:"name"`
+	Status    string  `avro:"status"`
+	Cost      float64 `avro:"cost"`
+	CreatedBy string  `avro:"created_by"`
+	UpdatedBy string  `avro:"updated_by"`
 }
 
 const (
@@ -41,7 +48,7 @@ const (
 				"type":"string"
 			 },
 			 {
-				"name":"active",
+				"name":"status",
 				"type":"string"
 			 },
 			 {

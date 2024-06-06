@@ -6,28 +6,35 @@ import (
 	"github.com/google/uuid"
 )
 
+type MerchantStatus string
+
+const (
+	ActiveMerchant   MerchantStatus = "ACTIVE"
+	InactiveMerchant MerchantStatus = "INACTIVE"
+)
+
 type Merchant struct {
-	Id        uuid.UUID   `json:"id"`
-	OwnerId   uuid.UUID   `json:"owner_id"`
-	RegionId  uuid.UUID   `json:"region_id"`
-	Slugs     []uuid.UUID `json:"slugs"`
-	Name      string      `json:"name"`
-	Active    bool        `json:"active"`
-	CreatedBy string      `json:"created_by"`
-	UpdatedBy string      `json:"updated_by"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
+	Id        uuid.UUID      `json:"id"`
+	OwnerId   uuid.UUID      `json:"owner_id"`
+	RegionId  uuid.UUID      `json:"region_id"`
+	Slugs     []uuid.UUID    `json:"slugs"`
+	Name      string         `json:"name"`
+	Status    MerchantStatus `json:"status"`
+	CreatedBy string         `json:"created_by"`
+	UpdatedBy string         `json:"updated_by"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
 }
 
 type MerchantEvent struct {
-	Id        string   `json:"id"`
-	OwnerId   string   `json:"owner_id"`
-	RegionId  string   `json:"region_id"`
-	Slugs     []string `json:"slugs"`
-	Name      string   `json:"name"`
-	Active    string   `json:"active"` //conseguimos não usar apenas string?
-	CreatedBy string   `json:"created_by"`
-	UpdatedBy string   `json:"updated_by"`
+	Id        string   `avro:"id"`
+	OwnerId   string   `avro:"owner_id"`
+	RegionId  string   `avro:"region_id"`
+	Slugs     []string `avro:"slugs"`
+	Name      string   `avro:"name"`
+	Status    string   `avro:"status"`
+	CreatedBy string   `avro:"created_by"`
+	UpdatedBy string   `avro:"updated_by"`
 }
 
 const (
@@ -60,7 +67,7 @@ const (
 				"type":"string"
 			 },
 			 {
-				"name":"active",
+				"name":"status",
 				"type":"string"
 			 },
 			 {

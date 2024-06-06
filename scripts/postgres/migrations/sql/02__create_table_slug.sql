@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS slug(
     id  UUID PRIMARY KEY NOT NULL,
     name   VARCHAR(50) NOT NULL,
-    active BOOLEAN NOT NULL,
+    status VARCHAR(10) DEFAULT 'ACTIVE',
     cost DECIMAL(5,2) NOT NULL,
     created_by VARCHAR(60),
     updated_by VARCHAR(60),

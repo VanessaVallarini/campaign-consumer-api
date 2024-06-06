@@ -19,7 +19,7 @@ func NewMerchantRepository(pool *pgxpool.Pool) MerchantRepository {
 }
 
 var upsertMerchantQuery = `
-	INSERT INTO merchant (id, owner_id, region_id, slugs, name, active, created_by, updated_by, created_at, updated_at)
+	INSERT INTO merchant (id, owner_id, region_id, slugs, name, status, created_by, updated_by, created_at, updated_at)
 	VALUES (
 		$1,
 		$2,
@@ -38,7 +38,7 @@ var upsertMerchantQuery = `
 		region_id = EXCLUDED.region_id,
 		slugs = EXCLUDED.slugs,
 		name = EXCLUDED.name,
-		active = EXCLUDED.active,
+		status = EXCLUDED.status,
 		updated_by = EXCLUDED.updated_by,
 		updated_at = EXCLUDED.updated_at
 	WHERE
@@ -46,7 +46,7 @@ var upsertMerchantQuery = `
 		OR merchant.region_id <> EXCLUDED.region_id
 		OR merchant.slugs <> EXCLUDED.slugs
 		OR merchant.name <> EXCLUDED.name
-		OR merchant.active <> EXCLUDED.active;
+		OR merchant.status <> EXCLUDED.status;
 `
 
 func (m MerchantRepository) Upsert(ctx context.Context, merchant model.Merchant) error {
@@ -58,7 +58,7 @@ func (m MerchantRepository) Upsert(ctx context.Context, merchant model.Merchant)
 		merchant.RegionId,
 		merchant.Slugs,
 		merchant.Name,
-		merchant.Active,
+		merchant.Status,
 		merchant.CreatedBy,
 		merchant.UpdatedBy,
 		merchant.CreatedAt,

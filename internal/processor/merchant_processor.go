@@ -2,13 +2,11 @@ package processor
 
 import (
 	"context"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
 	"github.com/google/uuid"
-	easyzap "github.com/lockp111/go-easyzap"
 )
 
 type MerchantService interface {
@@ -26,13 +24,6 @@ func NewMerchantProcessor(merchantService MerchantService) MerchantProcessor {
 }
 
 func (mp MerchantProcessor) MerchantProcessor(message model.MerchantEvent) (returnErr error) {
-	active, err := strconv.ParseBool(message.Active)
-	if err != nil {
-		easyzap.Error(err, "error converting string to bool")
-
-		return
-	}
-
 	name := strings.ToUpper(message.Name)
 
 	mp.merchantService.CreateOrUpdate(context.Background(), model.Merchant{
@@ -41,7 +32,7 @@ func (mp MerchantProcessor) MerchantProcessor(message model.MerchantEvent) (retu
 		RegionId:  uuid.MustParse(message.RegionId),
 		Slugs:     mp.convertSlugs(message.Slugs),
 		Name:      name,
-		Active:    active,
+		Status:    model.MerchantStatus(message.Status),
 		CreatedBy: message.CreatedBy,
 		UpdatedBy: message.UpdatedBy,
 		CreatedAt: time.Now(),

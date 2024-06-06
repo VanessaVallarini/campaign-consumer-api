@@ -11,3 +11,4 @@ CREATE TABLE IF NOT EXISTS ledger (
     FOREIGN KEY (campaign_id) REFERENCES campaign(id),
     FOREIGN KEY (spent_id) REFERENCES spent(id)
 );
+--slugId

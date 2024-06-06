@@ -19,7 +19,7 @@ func NewOwnerRepository(pool *pgxpool.Pool) OwnerRepository {
 }
 
 var upsertOwnerQuery = `
-	INSERT INTO owner (id, email, active, created_by, updated_by, created_at, updated_at)
+	INSERT INTO owner (id, email, status, created_by, updated_by, created_at, updated_at)
 	VALUES (
 		$1,
 		$2,
@@ -31,13 +31,13 @@ var upsertOwnerQuery = `
 	)
 	ON CONFLICT (id) DO UPDATE
 	SET
-		active = EXCLUDED.active,
+		status = EXCLUDED.status,
 		email = EXCLUDED.email,
 		updated_by = EXCLUDED.updated_by,
 		updated_at = EXCLUDED.updated_at
 	WHERE
 		owner.email <> EXCLUDED.email
-		OR owner.active <> EXCLUDED.active;
+		OR owner.status <> EXCLUDED.status;
 `
 
 func (o OwnerRepository) Upsert(ctx context.Context, owner model.Owner) error {
@@ -46,7 +46,7 @@ func (o OwnerRepository) Upsert(ctx context.Context, owner model.Owner) error {
 		upsertOwnerQuery,
 		owner.Id,
 		owner.Email,
-		owner.Active,
+		owner.Status,
 		owner.CreatedBy,
 		owner.UpdatedBy,
 		owner.CreatedAt,

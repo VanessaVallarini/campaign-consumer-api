@@ -4,11 +4,11 @@ CREATE TABLE IF NOT EXISTS merchant (
     region_id  UUID NOT NULL,
     slugs UUID[] NOT NULL,
     name   VARCHAR(50) NOT NULL,
-    active BOOLEAN NOT NULL,
+    status VARCHAR(10) DEFAULT 'ACTIVE',
     created_by VARCHAR(60),
     updated_by VARCHAR(60),
     created_at TIMESTAMP WITH TIME ZONE,
     updated_at TIMESTAMP WITH TIME ZONE,
-    FOREIGN KEY (owner_id) REFERENCES owner(id)
+    FOREIGN KEY (owner_id) REFERENCES owner(id),
     FOREIGN KEY (region_id) REFERENCES region(id)
 );

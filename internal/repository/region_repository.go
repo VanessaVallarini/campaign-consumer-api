@@ -19,7 +19,7 @@ func NewRegionRepository(pool *pgxpool.Pool) RegionRepository {
 }
 
 var upsertRegionQuery = `
-	INSERT INTO region (id, name, active, lat, long, cost, created_by, updated_by, created_at, updated_at)
+	INSERT INTO region (id, name, status, lat, long, cost, created_by, updated_by, created_at, updated_at)
 	VALUES (
 		$1,
 		$2,
@@ -35,7 +35,7 @@ var upsertRegionQuery = `
 	ON CONFLICT (id) DO UPDATE
 	SET
 		name = EXCLUDED.name,
-		active = EXCLUDED.active,
+		status = EXCLUDED.status,
 		lat = EXCLUDED.lat,
 		long = EXCLUDED.long,
 		cost = EXCLUDED.cost,
@@ -43,7 +43,7 @@ var upsertRegionQuery = `
 		updated_at = EXCLUDED.updated_at
 	WHERE
 		region.name <> EXCLUDED.name
-		OR region.active <> EXCLUDED.active
+		OR region.status <> EXCLUDED.status
 		OR region.lat <> EXCLUDED.lat
 		OR region.long <> EXCLUDED.long
 		OR region.cost <> EXCLUDED.cost;
@@ -55,7 +55,7 @@ func (s RegionRepository) Upsert(ctx context.Context, region model.Region) error
 		upsertRegionQuery,
 		region.Id,
 		region.Name,
-		region.Active,
+		region.Status,
 		region.Lat,
 		region.Long,
 		region.Cost,
