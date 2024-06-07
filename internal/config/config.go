@@ -211,7 +211,7 @@ func GetConfig() Config {
 			KafkaCampaign: KafkaConfig{
 				ClientId:          viperCfg.GetString("kafka.client-id"),
 				ConsumerGroupId:   viperCfg.GetString("kafka.consumer-group-id"),
-				Brokers:           viperCfg.GetStringSlice("kafkan.brokers"),
+				Brokers:           viperCfg.GetStringSlice("kafka.brokers"),
 				Acks:              viperCfg.GetString("kafka.acks"),
 				Timeout:           viperCfg.GetDuration("kafka.timeout"),
 				UseAuthentication: viperCfg.GetBool("kafka.use-authentication"),

@@ -46,30 +46,35 @@ func main() {
 	slugRepository := repository.NewSlugRepository(pool)
 	regionRepository := repository.NewRegionRepository(pool)
 	merchantRepository := repository.NewMerchantRepository(pool)
+	campaignRepository := repository.NewCampaignRepository(pool)
 
 	// service
 	ownerService := service.NewOwnerService(ownerRepository)
 	slugService := service.NewSlugService(slugRepository)
 	regionService := service.NewRegionService(regionRepository)
 	merchantService := service.NewMerchantService(merchantRepository)
+	campaignService := service.NewCampaignService(campaignRepository)
 
 	// processor
 	ownerProcessor := processor.NewOwnerProcessor(ownerService)
 	slugProcessor := processor.NewSlugProcessor(slugService)
 	regionProcessor := processor.NewRegionProcessor(regionService)
 	merchantProcessor := processor.NewMerchantProcessor(merchantService)
+	campaignProcessor := processor.NewCampaignProcessor(campaignService)
 
 	// handler
 	ownerHandler := handler.MakeOwnerEventHandler(ownerProcessor)
 	slugHandler := handler.MakeSlugEventHandler(slugProcessor)
 	regionHandler := handler.MakeRegionEventHandler(regionProcessor)
 	merchantHandler := handler.MakeMerchantEventHandler(merchantProcessor)
+	campaignHandler := handler.MakeCampaignEventHandler(campaignProcessor)
 
 	// client
 	ownerSrClient := client.NewSchemaRegistry(cfg.KafkaOwner)
 	slugSrClient := client.NewSchemaRegistry(cfg.KafkaSlug)
 	regionSrClient := client.NewSchemaRegistry(cfg.KafkaRegion)
 	merchantSrClient := client.NewSchemaRegistry(cfg.KafkaMerchant)
+	campaignSrClient := client.NewSchemaRegistry(cfg.KafkaCampaign)
 
 	//consumer
 	ownerConsumer := consumer.NewConsumer(ctx, cfg.KafkaOwner, ownerSrClient, ownerHandler)
@@ -83,6 +88,9 @@ func main() {
 
 	merchantConsumer := consumer.NewConsumer(ctx, cfg.KafkaMerchant, merchantSrClient, merchantHandler)
 	go merchantConsumer.ConsumerStart(cfg.KafkaMerchant)
+
+	campaignConsumer := consumer.NewConsumer(ctx, cfg.KafkaCampaign, campaignSrClient, campaignHandler)
+	go campaignConsumer.ConsumerStart(cfg.KafkaCampaign)
 
 	// Start HTTP server
 	go func() {

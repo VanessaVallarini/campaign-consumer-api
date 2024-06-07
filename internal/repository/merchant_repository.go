@@ -34,16 +34,12 @@ var upsertMerchantQuery = `
 	)
 	ON CONFLICT (id) DO UPDATE
 	SET
-		owner_id = EXCLUDED.owner_id,
-		region_id = EXCLUDED.region_id,
 		slugs = EXCLUDED.slugs,
 		name = EXCLUDED.name,
 		status = EXCLUDED.status,
 		updated_by = EXCLUDED.updated_by,
 		updated_at = EXCLUDED.updated_at
 	WHERE
-		merchant.owner_id <> EXCLUDED.owner_id
-		OR merchant.region_id <> EXCLUDED.region_id
 		OR merchant.slugs <> EXCLUDED.slugs
 		OR merchant.name <> EXCLUDED.name
 		OR merchant.status <> EXCLUDED.status;

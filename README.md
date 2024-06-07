@@ -84,3 +84,26 @@ curl --location 'http://localhost:8086/subjects/campaign.campaign_merchant_value
 	"updated_by": "van"
 }
 ```
+
+# CREATE SCHEMA CAMPAIGN
+```shell
+curl --location 'http://localhost:8086/subjects/campaign.campaign_value/versions' \
+--header 'Content-Type: application/json' \
+--data '{
+    "schema": "{\"type\":\"record\",\"name\":\"merchant\",\"namespace\":\"campaign.campaign_value\",\"fields\":[{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"merchant_id\",\"type\":\"string\"},{\"name\":\"status\",\"type\":\"string\"},{\"name\":\"lat\",\"type\":\"double\"},{\"name\":\"long\",\"type\":\"double\"},{\"name\":\"budget\",\"type\":\"double\"},{\"name\":\"created_by\",\"type\":\"string\"},{\"name\":\"updated_by\",\"type\":\"string\"}]}]}"
+}'
+```
+
+# SEND MESSAGE CAMPAIGN 
+```shell
+{
+	"id": "33cc11bf-3cda-4645-83b4-fedf27015111",
+	"merchant_id": "ed48d4be-2e8e-4f58-82af-b568ec3e0097",
+	"status": "ACTIVE",
+	"lat": -23.3212795,
+	"long": -51.165763,
+	"budget": 0.55,	
+	"created_by": "van",
+	"updated_by": "van"
+}
+```
