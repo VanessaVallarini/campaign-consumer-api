@@ -12,3 +12,6 @@ CREATE TABLE IF NOT EXISTS merchant (
     FOREIGN KEY (owner_id) REFERENCES owner(email),
     FOREIGN KEY (region_id) REFERENCES region(id)
 );
+
+CREATE INDEX merchant_id ON campaign_consumer_api.merchant USING btree (id);
+CREATE INDEX merchant_name ON campaign_consumer_api.merchant USING btree (name);

@@ -11,3 +11,5 @@ CREATE TABLE IF NOT EXISTS campaign(
     updated_at TIMESTAMP WITH TIME ZONE,
     FOREIGN KEY (merchant_id) REFERENCES merchant(id)
 );
+
+CREATE INDEX campaign_id ON campaign_consumer_api.campaign USING btree (id);

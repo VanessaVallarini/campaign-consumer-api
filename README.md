@@ -36,5 +36,9 @@ curl --location 'http://localhost:8086/subjects/campaign.campaign_merchant_value
 
 # CREATE SCHEMA CAMPAIGN
 ```shell
-
+curl --location 'http://localhost:8086/subjects/campaign.campaign_value/versions' \
+--header 'Content-Type: application/json' \
+--data '{
+      "schema": "{\"type\":\"record\",\"name\":\"campaign\",\"namespace\":\"campaign.campaign_value\",\"fields\":[{\"name\":\"id\",\"type\":{\"type\":\"string\",\"logicalType\":\"UUID\"}},{\"name\":\"merchant_id\",\"type\":{\"type\":\"string\",\"logicalType\":\"UUID\"}},{\"name\":\"status\",\"type\":\"string\"},{\"name\":\"lat\",\"type\":\"double\"},{\"name\":\"long\",\"type\":\"double\"},{\"name\":\"budget\",\"type\":\"double\"},{\"name\":\"user\",\"type\":\"string\"},{\"name\":\"eventTime\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}}]}"
+}'
 ```

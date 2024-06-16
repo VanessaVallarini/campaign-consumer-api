@@ -27,14 +27,14 @@ type Campaign struct {
 }
 
 type CampaignEvent struct {
-	Id         string  `avro:"id"`
-	MerchantId string  `avro:"merchant_id"`
-	Status     string  `avro:"status"`
-	Lat        float64 `avro:"lat"`
-	Long       float64 `avro:"long"`
-	Budget     float64 `avro:"budget"`
-	CreatedBy  string  `avro:"created_by"`
-	UpdatedBy  string  `avro:"updated_by"`
+	Id         uuid.UUID `avro:"id"`
+	MerchantId uuid.UUID `avro:"merchant_id"`
+	Status     string    `avro:"status"`
+	Lat        float64   `avro:"lat"`
+	Long       float64   `avro:"long"`
+	Budget     float64   `avro:"budget"`
+	User       string    `avro:"user"`
+	EventTime  time.Time `avro:"eventTime"`
 }
 
 const (
@@ -43,38 +43,47 @@ const (
 		"name":"campaign",
 		"namespace":"campaign.campaign_value",
 		"fields":[
-			 {
-				"name":"id",
-				"type":"string"
-			 },
-			 {
-				"name":"merchant_id",
-				"type":"string"
-			 },
-			 {
+			{
+				"name": "id",
+				"type": {
+				"type": "string",
+				"logicalType": "UUID"
+				}
+			},
+			{
+				"name": "merchant_id",
+				"type": {
+				"type": "string",
+				"logicalType": "UUID"
+				}
+			},
+			{
 				"name":"status",
 				"type":"string"
-			 },
-			 {
+			},
+			{
 				"name":"lat",
 				"type":"double"
-			 },
-			 {
+			},
+			{
 				"name":"long",
 				"type":"double"
-			 },
-			 {
+			},
+			{
 				"name":"budget",
 				"type":"double"
-			 },
-			 {
-				"name":"created_by",
+			},
+			{
+				"name":"user",
 				"type":"string"
-			 },
-			 {
-				"name":"updated_by",
-				"type":"string"
-			 }   
+			},
+			{
+				"name": "eventTime",
+				"type": {
+				"type": "long",
+				"logicalType": "timestamp-millis"
+				}
+			}  
 		]
 	 }`
 )
