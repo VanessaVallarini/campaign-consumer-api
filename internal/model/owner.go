@@ -6,31 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type OwnerStatus string
-
-const (
-	ActiveOwner   OwnerStatus = "ACTIVE"
-	InactiveOwner OwnerStatus = "INACTIVE"
-)
-
-type Owner struct {
-	Id        uuid.UUID   `json:"id"`
-	Email     string      `json:"email"`
-	Status    OwnerStatus `json:"status"`
-	CreatedBy string      `json:"created_by"`
-	UpdatedBy string      `json:"updated_by"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
-}
-
-type OwnerEvent struct {
-	Id        uuid.UUID `avro:"id"`
-	Email     string    `avro:"email"`
-	Status    string    `avro:"status"`
-	User      string    `avro:"user"`
-	EventTime time.Time `avro:"even_time"`
-}
-
 const (
 	OwnerAvro = `{
 		"type":"record",
@@ -53,16 +28,37 @@ const (
 				"type":"string"
 			},
 			{
-				"name":"user",
+				"name":"created_by",
 				"type":"string"
 			},
 			{
-				"name": "even_time",
+				"name":"updated_by",
+				"type":"string"
+			},
+			{
+				"name": "created_at",
 				"type": {
 				"type": "long",
 				"logicalType": "timestamp-millis"
 				}
-			}	   
+			},
+			{
+				"name": "updated_at",
+				"type": {
+				"type": "long",
+				"logicalType": "timestamp-millis"
+				}
+			}   
 		]
 	 }`
 )
+
+type Owner struct {
+	Id        uuid.UUID `json:"id" avro:"id"`
+	Email     string    `json:"email" avro:"email"`
+	Status    string    `json:"status" avro:"status"`
+	CreatedBy string    `json:"created_by" avro:"created_by"`
+	UpdatedBy string    `json:"updated_by" avro:"updated_by"`
+	CreatedAt time.Time `json:"created_at" avro:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" avro:"updated_at"`
+}

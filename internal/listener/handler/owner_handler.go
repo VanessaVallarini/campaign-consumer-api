@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"errors"
 
 	"github.com/IBM/sarama"
@@ -9,11 +10,11 @@ import (
 	easyzap "github.com/lockp111/go-easyzap"
 )
 
-type OwnerProcessor interface {
-	OwnerProcessor(model.OwnerEvent) error
+type OwnerService interface {
+	Upsert(context.Context, model.Owner) error
 }
 
-func MakeOwnerEventHandler(processor OwnerProcessor) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
+func MakeOwnerEventHandler(ownerService OwnerService) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
 	return func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
 		if msg == nil {
 			easyzap.Error("invalid message pointer")
@@ -22,7 +23,7 @@ func MakeOwnerEventHandler(processor OwnerProcessor) func(msg *sarama.ConsumerMe
 		}
 
 		// Decode msg.Value into model.Owner
-		var owner model.OwnerEvent
+		var owner model.Owner
 		if err := srClient.Decode(msg.Value, &owner, subject); err != nil {
 			easyzap.Error(err, "error during decode message consumer kafka on create or update owner")
 
@@ -30,7 +31,7 @@ func MakeOwnerEventHandler(processor OwnerProcessor) func(msg *sarama.ConsumerMe
 		}
 
 		easyzap.Infof("got owner event for %s", owner.Email)
-		if err := processor.OwnerProcessor(owner); err != nil {
+		if err := ownerService.Upsert(context.Background(), owner); err != nil {
 
 			return err
 		}
