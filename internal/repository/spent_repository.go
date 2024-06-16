@@ -29,11 +29,11 @@ var upsertSpentQuery = `
 		$5,
 		$6
 	)
-	ON CONFLICT (id) DO UPDATE
+	ON CONFLICT (campaign_id) DO UPDATE
 	SET
-		total_spent = EXCLUDED.total_spent,
-		total_clicks = EXCLUDED.total_clicks,
-		total_impressions = EXCLUDED.total_impressions;
+		total_spent = spent.total_spent + EXCLUDED.total_spent,
+		total_clicks = spent.total_clicks + EXCLUDED.total_clicks,
+		total_impressions = spent.total_impressions + EXCLUDED.total_impressions;
 `
 
 func (s SpentRepository) Upsert(ctx context.Context, tx pgx.Tx, spent model.Spent) error {

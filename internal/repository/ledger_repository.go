@@ -20,7 +20,7 @@ func NewLedgerRepository(pool *pgxpool.Pool) LedgerRepository {
 }
 
 var createLedgerQuery = `
-	INSERT INTO ledger (id, campaign_id, spent_id, user_id, event_type, cost, lat, long, created_at)
+	INSERT INTO ledger (id, campaign_id, spent_id, slug_id, user_id, event_type, cost, lat, long, created_at)
 	VALUES (
 		$1,
 		$2,
@@ -30,7 +30,8 @@ var createLedgerQuery = `
 		$6,
 		$7,
 		$8,
-		$9
+		$9,
+		$10
 	);
 `
 
@@ -41,11 +42,13 @@ func (s LedgerRepository) Create(ctx context.Context, tx pgx.Tx, ledger model.Le
 		ledger.Id,
 		ledger.CampaignId,
 		ledger.SpentId,
+		ledger.SlugId,
 		ledger.UserId,
 		ledger.EventType,
 		ledger.Cost,
 		ledger.Lat,
 		ledger.Long,
+		ledger.CreatedAt,
 	)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create ledger in database")

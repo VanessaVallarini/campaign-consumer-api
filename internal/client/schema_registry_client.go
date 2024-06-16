@@ -24,8 +24,8 @@ func NewSchemaRegistry(brokerConfig config.KafkaConfig) SchemaRegistryClient {
 	}
 }
 
-func (src SchemaRegistryClient) Decode(data []byte, value interface{}, subject string) error {
-	schema, err := src.getSchema(subject)
+func (sr SchemaRegistryClient) Decode(data []byte, value interface{}, subject string) error {
+	schema, err := sr.getSchema(subject)
 	if err != nil {
 		return err
 	}
@@ -48,8 +48,8 @@ func (src SchemaRegistryClient) Decode(data []byte, value interface{}, subject s
 	return nil
 }
 
-func (src SchemaRegistryClient) getSchema(subject string) (*srclient.Schema, error) {
-	schema, err := src.srClient.GetLatestSchema(subject)
+func (sr SchemaRegistryClient) getSchema(subject string) (*srclient.Schema, error) {
+	schema, err := sr.srClient.GetLatestSchema(subject)
 	if err != nil {
 		return nil, err
 	}

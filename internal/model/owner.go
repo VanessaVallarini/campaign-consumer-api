@@ -24,11 +24,11 @@ type Owner struct {
 }
 
 type OwnerEvent struct {
-	Id        string `avro:"id"`
-	Email     string `avro:"email"`
-	Status    string `avro:"status"`
-	CreatedBy string `avro:"created_by"`
-	UpdatedBy string `avro:"updated_by"`
+	Id        string `json:"id" avro:"id"`
+	Email     string `json:"email" avro:"email"`
+	Status    string `json:"status" avro:"status"`
+	CreatedBy string `json:"created_by" avro:"created_by"`
+	UpdatedBy string `json:"updated_by" avro:"updated_by"`
 }
 
 const (
