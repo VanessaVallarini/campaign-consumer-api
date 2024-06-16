@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"errors"
 
 	"github.com/IBM/sarama"
@@ -9,11 +10,11 @@ import (
 	easyzap "github.com/lockp111/go-easyzap"
 )
 
-type RegionProcessor interface {
-	RegionProcessor(model.RegionEvent) error
+type RegionService interface {
+	Upsert(context.Context, model.Region) error
 }
 
-func MakeRegionEventHandler(processor RegionProcessor) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
+func MakeRegionEventHandler(regionService RegionService) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
 	return func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
 		if msg == nil {
 			easyzap.Error("invalid message pointer")
@@ -21,16 +22,16 @@ func MakeRegionEventHandler(processor RegionProcessor) func(msg *sarama.Consumer
 			return errors.New("Invalid message pointer")
 		}
 
-		// Decode msg.Value into model.RegionEvent
-		var regionEvent model.RegionEvent
-		if err := srClient.Decode(msg.Value, &regionEvent, subject); err != nil {
+		// Decode msg.Value into model.Region
+		var region model.Region
+		if err := srClient.Decode(msg.Value, &region, subject); err != nil {
 			easyzap.Error(err, "error during decode message consumer kafka on create or update region")
 
 			return err
 		}
 
-		easyzap.Infof("got region event for %s", regionEvent.Name)
-		if err := processor.RegionProcessor(regionEvent); err != nil {
+		easyzap.Infof("got region event for %s", region.Name)
+		if err := regionService.Upsert(context.Background(), region); err != nil {
 
 			return err
 		}

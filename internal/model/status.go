@@ -13,3 +13,10 @@ const (
 	ActiveSlug   SlugStatus = "ACTIVE"
 	InactiveSlug SlugStatus = "INACTIVE"
 )
+
+type RegionStatus string
+
+const (
+	ActiveRegion   RegionStatus = "ACTIVE"
+	InactiveRegion RegionStatus = "INACTIVE"
+)
