@@ -1,4 +1,4 @@
-package kafka
+package client
 
 import (
 	"crypto/sha256"

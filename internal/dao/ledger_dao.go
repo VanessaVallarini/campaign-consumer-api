@@ -1,10 +1,10 @@
-package repository
+package dao
 
 import (
 	"context"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
-	"github.com/jackc/pgx/v5"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"
 )
@@ -35,8 +35,8 @@ var createLedgerQuery = `
 	);
 `
 
-func (s LedgerRepository) Create(ctx context.Context, tx pgx.Tx, ledger model.Ledger) error {
-	_, err := tx.Exec(
+func (s LedgerRepository) Create(ctx context.Context, tx transaction.Transaction, ledger model.Ledger) error {
+	err := tx.Exec(
 		ctx,
 		createLedgerQuery,
 		ledger.Id,

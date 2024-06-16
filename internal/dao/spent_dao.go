@@ -1,10 +1,10 @@
-package repository
+package dao
 
 import (
 	"context"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
-	"github.com/jackc/pgx/v5"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"
 )
@@ -36,8 +36,8 @@ var upsertSpentQuery = `
 		total_impressions = spent.total_impressions + EXCLUDED.total_impressions;
 `
 
-func (s SpentRepository) Upsert(ctx context.Context, tx pgx.Tx, spent model.Spent) error {
-	_, err := tx.Exec(
+func (s SpentRepository) Upsert(ctx context.Context, tx transaction.Transaction, spent model.Spent) error {
+	err := tx.Exec(
 		ctx,
 		upsertSpentQuery,
 		spent.Id,

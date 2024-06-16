@@ -1,9 +1,11 @@
-package repository
+package dao
 
 import (
 	"context"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"
 )
@@ -17,6 +19,19 @@ func NewRegionRepository(pool *pgxpool.Pool) RegionRepository {
 		pool: pool,
 	}
 }
+
+const allRegionFields = `
+	id,
+	name,
+	status,
+	lat,
+	long,
+	cost,
+	created_by,
+	updated_by,
+	created_at,
+	updated_at
+`
 
 var upsertRegionQuery = `
 	INSERT INTO region (id, name, status, lat, long, cost, created_by, updated_by, created_at, updated_at)
@@ -49,8 +64,8 @@ var upsertRegionQuery = `
 		OR region.cost <> EXCLUDED.cost;
 `
 
-func (s RegionRepository) Upsert(ctx context.Context, region model.Region) error {
-	_, err := s.pool.Exec(
+func (r RegionRepository) Upsert(ctx context.Context, region model.Region) error {
+	_, err := r.pool.Exec(
 		ctx,
 		upsertRegionQuery,
 		region.Id,
@@ -69,4 +84,26 @@ func (s RegionRepository) Upsert(ctx context.Context, region model.Region) error
 	}
 
 	return nil
+}
+
+func (r RegionRepository) Fetch(ctx context.Context, id uuid.UUID) (model.Region, error) {
+	var region model.Region
+
+	query := `SELECT ` + allRegionFields + ` from region WHERE id = $1`
+
+	row := r.pool.QueryRow(ctx, query, id)
+	err := row.Scan(
+		&region.Id, &region.Name, &region.Status, &region.Lat,
+		&region.Long, &region.Cost, &region.CreatedBy,
+		&region.UpdatedBy, &region.CreatedAt, &region.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return model.Region{}, errors.Wrap(err, "Region not found")
+		}
+		return model.Region{}, errors.Wrap(err, "Failed to fetch region in database")
+	}
+
+	return region, nil
 }

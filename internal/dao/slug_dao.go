@@ -1,9 +1,11 @@
-package repository
+package dao
 
 import (
 	"context"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"
 )
@@ -17,6 +19,17 @@ func NewSlugRepository(pool *pgxpool.Pool) SlugRepository {
 		pool: pool,
 	}
 }
+
+const allSlugFields = `
+	id, 
+	name, 
+	status, 
+	cost, 
+	created_by, 
+	updated_by, 
+	created_at, 
+	updated_at
+`
 
 var upsertSlugQuery = `
 	INSERT INTO slug (id, name, status, cost, created_by, updated_by, created_at, updated_at)
@@ -61,4 +74,25 @@ func (s SlugRepository) Upsert(ctx context.Context, slug model.Slug) error {
 	}
 
 	return nil
+}
+
+func (s SlugRepository) Fetch(ctx context.Context, id uuid.UUID) (model.Slug, error) {
+	var slug model.Slug
+
+	query := `SELECT ` + allSlugFields + ` from slug WHERE id = $1`
+
+	row := s.pool.QueryRow(ctx, query, id)
+	err := row.Scan(
+		&slug.Id, &slug.Name, &slug.Status, &slug.Cost, &slug.CreatedBy,
+		&slug.UpdatedBy, &slug.CreatedAt, &slug.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return model.Slug{}, errors.Wrap(err, "Slug not found")
+		}
+		return model.Slug{}, errors.Wrap(err, "Failed to fetch slug in database")
+	}
+
+	return slug, nil
 }

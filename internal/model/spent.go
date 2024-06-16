@@ -7,6 +7,6 @@ type Spent struct {
 	CampaignId       uuid.UUID `json:"campaign_id"`
 	Bucket           string    `json:"bucket"`
 	TotalSpent       float64   `json:"total_spent"`
-	TotalClicks      string    `json:"total_clicks"`
-	TotalImpressions string    `json:"total_impressions"`
+	TotalClicks      float64   `json:"total_clicks"`
+	TotalImpressions float64   `json:"total_impressions"`
 }

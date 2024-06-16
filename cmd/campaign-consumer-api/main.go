@@ -8,11 +8,12 @@ import (
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/api"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/config"
-	"github.com/VanessaVallarini/campaign-consumer-api/internal/consumer"
-	"github.com/VanessaVallarini/campaign-consumer-api/internal/handler"
-	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka"
-	"github.com/VanessaVallarini/campaign-consumer-api/internal/processor"
-	"github.com/VanessaVallarini/campaign-consumer-api/internal/repository"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/dao"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/listener/handler"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/listener/processor"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/client"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/consumer"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/postgres"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/service"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -41,12 +42,12 @@ func main() {
 	}))
 
 	// repository
-	pool := repository.CreatePool(ctx, &cfg.Database)
-	ownerRepository := repository.NewOwnerRepository(pool)
-	slugRepository := repository.NewSlugRepository(pool)
-	regionRepository := repository.NewRegionRepository(pool)
-	merchantRepository := repository.NewMerchantRepository(pool)
-	campaignRepository := repository.NewCampaignRepository(pool)
+	pool := postgres.CreatePool(ctx, &cfg.Database)
+	ownerRepository := dao.NewOwnerRepository(pool)
+	slugRepository := dao.NewSlugRepository(pool)
+	regionRepository := dao.NewRegionRepository(pool)
+	merchantRepository := dao.NewMerchantRepository(pool)
+	campaignRepository := dao.NewCampaignRepository(pool)
 
 	// service
 	ownerService := service.NewOwnerService(ownerRepository)
@@ -70,11 +71,11 @@ func main() {
 	campaignHandler := handler.MakeCampaignEventHandler(campaignProcessor)
 
 	// client
-	ownerSrClient := kafka.NewSchemaRegistry(cfg.KafkaOwner)
-	slugSrClient := kafka.NewSchemaRegistry(cfg.KafkaSlug)
-	regionSrClient := kafka.NewSchemaRegistry(cfg.KafkaRegion)
-	merchantSrClient := kafka.NewSchemaRegistry(cfg.KafkaMerchant)
-	campaignSrClient := kafka.NewSchemaRegistry(cfg.KafkaCampaign)
+	ownerSrClient := client.NewSchemaRegistry(cfg.KafkaOwner)
+	slugSrClient := client.NewSchemaRegistry(cfg.KafkaSlug)
+	regionSrClient := client.NewSchemaRegistry(cfg.KafkaRegion)
+	merchantSrClient := client.NewSchemaRegistry(cfg.KafkaMerchant)
+	campaignSrClient := client.NewSchemaRegistry(cfg.KafkaCampaign)
 
 	//consumer
 	ownerConsumer := consumer.NewConsumer(ctx, cfg.KafkaOwner, ownerSrClient, ownerHandler)

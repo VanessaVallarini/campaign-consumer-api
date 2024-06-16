@@ -11,10 +11,10 @@ import (
 	easyzap "github.com/lockp111/go-easyzap"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/config"
-	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/client"
 )
 
-type MessageHandler func(message *sarama.ConsumerMessage, srClient kafka.SchemaRegistryClient, subject string) error
+type MessageHandler func(message *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error
 
 type Consumer struct {
 	ready               chan bool
@@ -22,13 +22,13 @@ type Consumer struct {
 	saramaClusterAdmin  sarama.ClusterAdmin
 	saramaConsumerGroup sarama.ConsumerGroup
 	saramaConfig        *sarama.Config
-	srClient            kafka.SchemaRegistryClient
+	srClient            client.SchemaRegistryClient
 	messageHandler      MessageHandler
 	subject             string
 }
 
-func NewConsumer(ctx context.Context, brokerConfig config.KafkaConfig, srClient kafka.SchemaRegistryClient, messageHandler MessageHandler) Consumer {
-	kafkaClient, saramaClusterAdmin, saramaConsumerGroup, saramaConfig := kafka.NewKafkaClient(brokerConfig)
+func NewConsumer(ctx context.Context, brokerConfig config.KafkaConfig, srClient client.SchemaRegistryClient, messageHandler MessageHandler) Consumer {
+	kafkaClient, saramaClusterAdmin, saramaConsumerGroup, saramaConfig := client.NewKafkaClient(brokerConfig)
 
 	return Consumer{
 		ready:               make(chan bool),

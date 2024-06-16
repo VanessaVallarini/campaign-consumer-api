@@ -34,7 +34,7 @@ type MerchantEvent struct {
 	Name      string    `avro:"name"`
 	Status    string    `avro:"status"`
 	User      string    `avro:"user"`
-	EventTime time.Time `avro:"eventTime"`
+	EventTime time.Time `avro:"even_time"`
 }
 
 const (
@@ -84,7 +84,7 @@ const (
 				"type":"string"
 			},
 			{
-				"name": "eventTime",
+				"name": "even_time",
 				"type": {
 				"type": "long",
 				"logicalType": "timestamp-millis"

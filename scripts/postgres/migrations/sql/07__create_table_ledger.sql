@@ -13,4 +13,8 @@ CREATE TABLE IF NOT EXISTS ledger (
     FOREIGN KEY (spent_id) REFERENCES spent(id),
     FOREIGN KEY (slug_id) REFERENCES slug(id)
 );
---slugId
+
+CREATE INDEX ledger_id ON campaign_consumer_api.ledger USING btree (id);
+CREATE INDEX ledger_campaign_id ON campaign_consumer_api.ledger USING btree (campaign_id);
+CREATE INDEX ledger_spent_id ON campaign_consumer_api.ledger USING btree (spent_id);
+CREATE INDEX ledger_slug_id ON campaign_consumer_api.ledger USING btree (slug_id);

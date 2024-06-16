@@ -1,25 +1,19 @@
 package model
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
-type ClickImpression struct {
-	CampaignId uuid.UUID `json:"campaign_id"`
-	SlugId     uuid.UUID `json:"slug_id"`
-	UserId     uuid.UUID `json:"user_id"`
-	EventType  string    `json:"event_type"`
-	Lat        float64   `json:"lat"`
-	Long       float64   `json:"long"`
-}
-
 type ClickImpressionEvent struct {
-	CampaignId string  `avro:"campaign_id"`
-	SlugId     string  `avro:"slug_id"`
-	UserId     string  `avro:"user_id"`
-	EventType  string  `avro:"event_type"`
-	Lat        float64 `avro:"lat"`
-	Long       float64 `avro:"long"`
+	CampaignId uuid.UUID `avro:"campaign_id"`
+	SlugId     uuid.UUID `avro:"slug_id"`
+	UserId     uuid.UUID `avro:"user_id"`
+	EventType  string    `avro:"event_type"`
+	Lat        float64   `avro:"lat"`
+	Long       float64   `avro:"long"`
+	EventTime  time.Time `avro:"event_time"`
 }
 
 const (
@@ -28,30 +22,46 @@ const (
 		"name":"click_impression",
 		"namespace":"campaign.campaign_click_impression_value",
 		"fields":[
-			 {
-				"name":"campaign_id",
-				"type":"string"
-			 },
-			 {
-				"name":"slug_id",
-				"type":"string"
-			 },
-			 {
-				"name":"user_id",
-				"type":"string"
-			 },
-			 {
+			{
+				"name": "campaign_id",
+				"type": {
+				"type": "string",
+				"logicalType": "UUID"
+				}
+			},
+			{
+				"name": "slug_id",
+				"type": {
+				"type": "string",
+				"logicalType": "UUID"
+				}
+			},
+			{
+				"name": "user_id",
+				"type": {
+				"type": "string",
+				"logicalType": "UUID"
+				}
+			},
+			{
 				"name":"event_type",
-				"type":"double"
-			 },
-			 {
+				"type":"string"
+			},
+			{
 				"name":"lat",
 				"type":"double"
-			 },
-			 {
+			},
+			{
 				"name":"long",
 				"type":"double"
-			 }   
+			},
+			{
+				"name": "event_time",
+				"type": {
+				"type": "long",
+				"logicalType": "timestamp-millis"
+				}
+			}
 		]
 	 }`
 )

@@ -7,3 +7,7 @@ CREATE TABLE IF NOT EXISTS spent(
     total_impressions integer NOT NULL,
     FOREIGN KEY (campaign_id) REFERENCES campaign(id)
 );
+
+CREATE INDEX spent_id ON campaign_consumer_api.spent USING btree (id);
+CREATE INDEX spent_campaign_id ON campaign_consumer_api.spent USING btree (campaign_id);
+CREATE INDEX spent_bucket ON campaign_consumer_api.spent USING btree (bucket);

@@ -34,7 +34,7 @@ type RegionEvent struct {
 	Long      float64   `avro:"long"`
 	Cost      float64   `avro:"cost"`
 	User      string    `avro:"user"`
-	EventTime time.Time `avro:"eventTime"`
+	EventTime time.Time `avro:"even_time"`
 }
 
 const (
@@ -75,7 +75,7 @@ const (
 				"type":"string"
 			},
 			{
-				"name": "eventTime",
+				"name": "even_time",
 				"type": {
 				"type": "long",
 				"logicalType": "timestamp-millis"

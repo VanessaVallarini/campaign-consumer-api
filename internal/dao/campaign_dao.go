@@ -1,9 +1,11 @@
-package repository
+package dao
 
 import (
 	"context"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"
 )
@@ -17,6 +19,19 @@ func NewCampaignRepository(pool *pgxpool.Pool) CampaignRepository {
 		pool: pool,
 	}
 }
+
+const allCampaignFields = `
+	id, 
+	merchant_id, 
+	status, 
+	lat, 
+	long,
+	budget,
+	created_by,
+	updated_by, 
+	created_at, 
+	updated_at
+`
 
 var upsertCampaignQuery = `
 	INSERT INTO campaign (id, merchant_id, status, lat, long, budget, created_by, updated_by, created_at, updated_at)
@@ -67,4 +82,26 @@ func (c CampaignRepository) Upsert(ctx context.Context, campaign model.Campaign)
 	}
 
 	return nil
+}
+
+func (c CampaignRepository) Fetch(ctx context.Context, id uuid.UUID) (model.Campaign, error) {
+	var campaign model.Campaign
+
+	query := `SELECT ` + allCampaignFields + ` from campaig WHERE id = $1`
+
+	row := c.pool.QueryRow(ctx, query, id)
+	err := row.Scan(
+		&campaign.Id, &campaign.MerchantId, &campaign.Status, &campaign.Lat,
+		&campaign.Long, &campaign.Budget, &campaign.CreatedBy,
+		&campaign.UpdatedBy, &campaign.CreatedAt, &campaign.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return model.Campaign{}, errors.Wrap(err, "Campaign not found")
+		}
+		return model.Campaign{}, errors.Wrap(err, "Failed to fetch campaign in database")
+	}
+
+	return campaign, nil
 }

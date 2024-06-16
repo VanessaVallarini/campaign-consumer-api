@@ -5,7 +5,7 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
-	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/client"
 	easyzap "github.com/lockp111/go-easyzap"
 )
 
@@ -13,8 +13,8 @@ type SlugProcessor interface {
 	SlugProcessor(model.SlugEvent) error
 }
 
-func MakeSlugEventHandler(processor SlugProcessor) func(msg *sarama.ConsumerMessage, srClient kafka.SchemaRegistryClient, subject string) error {
-	return func(msg *sarama.ConsumerMessage, srClient kafka.SchemaRegistryClient, subject string) error {
+func MakeSlugEventHandler(processor SlugProcessor) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
+	return func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
 		if msg == nil {
 			easyzap.Error("invalid message pointer")
 

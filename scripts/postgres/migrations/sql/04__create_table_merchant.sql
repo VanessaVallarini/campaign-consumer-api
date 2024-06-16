@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS merchant (
     id  UUID PRIMARY KEY NOT NULL,
-    owner_email  UUID NOT NULL,
+    owner_id  UUID NOT NULL,
     region_id  UUID NOT NULL,
     slugs UUID[] NOT NULL,
     name   VARCHAR(50) NOT NULL,
