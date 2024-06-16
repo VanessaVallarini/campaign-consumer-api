@@ -3,7 +3,6 @@ package processor
 import (
 	"context"
 	"strings"
-	"time"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
 	"github.com/google/uuid"
@@ -27,16 +26,16 @@ func (mp MerchantProcessor) MerchantProcessor(message model.MerchantEvent) (retu
 	name := strings.ToUpper(message.Name)
 
 	mp.merchantService.CreateOrUpdate(context.Background(), model.Merchant{
-		Id:        uuid.MustParse(message.Id),
-		OwnerId:   uuid.MustParse(message.OwnerId),
-		RegionId:  uuid.MustParse(message.RegionId),
+		Id:        message.Id,
+		OwnerId:   message.OwnerId,
+		RegionId:  message.RegionId,
 		Slugs:     mp.convertSlugs(message.Slugs),
-		Name:      name,
+		Name:      strings.ToUpper(name),
 		Status:    model.MerchantStatus(message.Status),
-		CreatedBy: message.CreatedBy,
-		UpdatedBy: message.UpdatedBy,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedBy: message.User,
+		UpdatedBy: message.User,
+		CreatedAt: message.EventTime,
+		UpdatedAt: message.EventTime,
 	})
 
 	return nil

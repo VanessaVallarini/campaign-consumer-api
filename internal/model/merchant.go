@@ -27,14 +27,14 @@ type Merchant struct {
 }
 
 type MerchantEvent struct {
-	Id        string   `avro:"id"`
-	OwnerId   string   `avro:"owner_id"`
-	RegionId  string   `avro:"region_id"`
-	Slugs     []string `avro:"slugs"`
-	Name      string   `avro:"name"`
-	Status    string   `avro:"status"`
-	CreatedBy string   `avro:"created_by"`
-	UpdatedBy string   `avro:"updated_by"`
+	Id        uuid.UUID `avro:"id"`
+	OwnerId   uuid.UUID `avro:"owner_id"`
+	RegionId  uuid.UUID `avro:"region_id"`
+	Slugs     []string  `avro:"slugs"`
+	Name      string    `avro:"name"`
+	Status    string    `avro:"status"`
+	User      string    `avro:"user"`
+	EventTime time.Time `avro:"eventTime"`
 }
 
 const (
@@ -43,41 +43,53 @@ const (
 		"name":"merchant",
 		"namespace":"campaign.campaign_merchant_value",
 		"fields":[
-			 {
-				"name":"id",
-				"type":"string"
-			 },
-			 {
-				"name":"owner_id",
-				"type":"string"
-			 },
-			 {
-				"name":"region_id",
-				"type":"string"
-			 },
-			 {
+			{
+				"name": "id",
+				"type": {
+				"type": "string",
+				"logicalType": "UUID"
+				}
+			},
+			{
+				"name": "owner_id",
+				"type": {
+				"type": "string",
+				"logicalType": "UUID"
+				}
+			},
+			{
+				"name": "region_id",
+				"type": {
+				"type": "string",
+				"logicalType": "UUID"
+				}
+			},
+			{
 				"name":"slugs",
 				"type": {
 					"type": "array",
 					"items": "string"
 				}
-			 },
-			 {
+			},
+			{
 				"name":"name",
 				"type":"string"
-			 },
-			 {
+			},
+			{
 				"name":"status",
 				"type":"string"
-			 },
-			 {
-				"name":"created_by",
+			},
+			{
+				"name":"user",
 				"type":"string"
-			 },
-			 {
-				"name":"updated_by",
-				"type":"string"
-			 }		   
+			},
+			{
+				"name": "eventTime",
+				"type": {
+				"type": "long",
+				"logicalType": "timestamp-millis"
+				}
+			}		   
 		]
 	 }`
 )

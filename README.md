@@ -27,7 +27,11 @@ curl --location 'http://localhost:8086/subjects/campaign.campaign_region_value/v
 
 # CREATE SCHEMA MERCHANT
 ```shell
-
+curl --location 'http://localhost:8086/subjects/campaign.campaign_merchant_value/versions' \
+--header 'Content-Type: application/json' \
+--data '{
+      "schema": "{\"type\":\"record\",\"name\":\"merchant\",\"namespace\":\"campaign.campaign_merchant_value\",\"fields\":[{\"name\":\"id\",\"type\":{\"type\":\"string\",\"logicalType\":\"UUID\"}},{\"name\":\"owner_id\",\"type\":{\"type\":\"string\",\"logicalType\":\"UUID\"}},{\"name\":\"region_id\",\"type\":{\"type\":\"string\",\"logicalType\":\"UUID\"}},{\"name\":\"slugs\",\"type\":{\"type\":\"array\",\"items\":\"string\"}},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"status\",\"type\":\"string\"},{\"name\":\"user\",\"type\":\"string\"},{\"name\":\"eventTime\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}}]}"
+}'
 ```
 
 # CREATE SCHEMA CAMPAIGN

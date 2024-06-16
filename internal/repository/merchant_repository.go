@@ -40,7 +40,7 @@ var upsertMerchantQuery = `
 		updated_by = EXCLUDED.updated_by,
 		updated_at = EXCLUDED.updated_at
 	WHERE
-		OR merchant.slugs <> EXCLUDED.slugs
+		merchant.slugs <> EXCLUDED.slugs
 		OR merchant.name <> EXCLUDED.name
 		OR merchant.status <> EXCLUDED.status;
 `
