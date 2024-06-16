@@ -9,3 +9,4 @@ CREATE TABLE IF NOT EXISTS owner (
 );
 
 CREATE INDEX owner_id ON campaign_consumer_api.owner USING btree (id);
+CREATE INDEX owner_email ON campaign_consumer_api.owner USING btree (email);

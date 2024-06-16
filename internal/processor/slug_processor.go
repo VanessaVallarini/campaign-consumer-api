@@ -3,10 +3,8 @@ package processor
 import (
 	"context"
 	"strings"
-	"time"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
-	"github.com/google/uuid"
 )
 
 type SlugService interface {
@@ -24,17 +22,15 @@ func NewSlugProcessor(slugService SlugService) SlugProcessor {
 }
 
 func (sp SlugProcessor) SlugProcessor(message model.SlugEvent) (returnErr error) {
-	name := strings.ToUpper(message.Name)
-
 	sp.slugService.CreateOrUpdate(context.Background(), model.Slug{
-		Id:        uuid.MustParse(message.Id),
-		Name:      name,
+		Id:        message.Id,
+		Name:      strings.ToUpper(message.Name),
 		Status:    model.SlugStatus(message.Status),
 		Cost:      message.Cost,
-		CreatedBy: message.CreatedBy,
-		UpdatedBy: message.UpdatedBy,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedBy: message.User,
+		UpdatedBy: message.User,
+		CreatedAt: message.EventTime,
+		UpdatedAt: message.EventTime,
 	})
 
 	return nil

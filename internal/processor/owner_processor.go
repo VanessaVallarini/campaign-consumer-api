@@ -3,7 +3,6 @@ package processor
 import (
 	"context"
 	"strings"
-	"time"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
 )
@@ -29,8 +28,8 @@ func (oep OwnerProcessor) OwnerProcessor(message model.OwnerEvent) (returnErr er
 		Status:    model.OwnerStatus(message.Status),
 		CreatedBy: message.User,
 		UpdatedBy: message.User,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: message.EventTime,
+		UpdatedAt: message.EventTime,
 	})
 
 	return nil

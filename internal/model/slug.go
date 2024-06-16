@@ -25,12 +25,12 @@ type Slug struct {
 }
 
 type SlugEvent struct {
-	Id        string  `avro:"id"`
-	Name      string  `avro:"name"`
-	Status    string  `avro:"status"`
-	Cost      float64 `avro:"cost"`
-	CreatedBy string  `avro:"created_by"`
-	UpdatedBy string  `avro:"updated_by"`
+	Id        uuid.UUID `avro:"id"`
+	Name      string    `avro:"name"`
+	Status    string    `avro:"status"`
+	Cost      float64   `avro:"cost"`
+	User      string    `avro:"user"`
+	EventTime time.Time `avro:"eventTime"`
 }
 
 const (
@@ -39,30 +39,36 @@ const (
 		"name":"slug",
 		"namespace":"campaign.campaign_slug_value",
 		"fields":[
-			 {
-				"name":"id",
-				"type":"string"
-			 },
-			 {
+			{
+				"name": "id",
+				"type": {
+				"type": "string",
+				"logicalType": "UUID"
+				}
+			},
+			{
 				"name":"name",
 				"type":"string"
-			 },
-			 {
+			},
+			{
 				"name":"status",
 				"type":"string"
-			 },
-			 {
+			},
+			{
 				"name":"cost",
 				"type":"double"
-			 },
-			 {
-				"name":"created_by",
+			},
+			{
+				"name":"user",
 				"type":"string"
-			 },
-			 {
-				"name":"updated_by",
-				"type":"string"
-			 }		   
+			},
+			{
+				"name": "eventTime",
+				"type": {
+				"type": "long",
+				"logicalType": "timestamp-millis"
+				}
+			}		   
 		]
 	 }`
 )

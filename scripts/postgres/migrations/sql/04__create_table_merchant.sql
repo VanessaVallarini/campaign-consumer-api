@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS merchant (
     id  UUID PRIMARY KEY NOT NULL,
-    owner_id  UUID NOT NULL,
+    owner_email  UUID NOT NULL,
     region_id  UUID NOT NULL,
     slugs UUID[] NOT NULL,
     name   VARCHAR(50) NOT NULL,
@@ -9,6 +9,6 @@ CREATE TABLE IF NOT EXISTS merchant (
     updated_by VARCHAR(60),
     created_at TIMESTAMP WITH TIME ZONE,
     updated_at TIMESTAMP WITH TIME ZONE,
-    FOREIGN KEY (owner_id) REFERENCES owner(id),
+    FOREIGN KEY (owner_id) REFERENCES owner(email),
     FOREIGN KEY (region_id) REFERENCES region(id)
 );
