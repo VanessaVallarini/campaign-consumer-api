@@ -7,7 +7,7 @@ import (
 )
 
 type CampaignService interface {
-	CreateOrUpdate(context.Context, model.Campaign) error
+	Upsert(context.Context, model.Campaign) error
 }
 
 type CampaignProcessor struct {
@@ -21,7 +21,7 @@ func NewCampaignProcessor(campaignService CampaignService) CampaignProcessor {
 }
 
 func (cp CampaignProcessor) CampaignProcessor(message model.CampaignEvent) (returnErr error) {
-	cp.campaignService.CreateOrUpdate(context.Background(), model.Campaign{
+	return cp.campaignService.Upsert(context.Background(), model.Campaign{
 		Id:         message.Id,
 		MerchantId: message.MerchantId,
 		Status:     model.CampaignStatus(message.Status),
@@ -33,6 +33,4 @@ func (cp CampaignProcessor) CampaignProcessor(message model.CampaignEvent) (retu
 		CreatedAt:  message.EventTime,
 		UpdatedAt:  message.EventTime,
 	})
-
-	return nil
 }

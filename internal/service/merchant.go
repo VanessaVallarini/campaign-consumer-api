@@ -22,7 +22,7 @@ func NewMerchantService(merchantRepository MerchantRepository) MerchantService {
 	}
 }
 
-func (m MerchantService) CreateOrUpdate(ctx context.Context, merchant model.Merchant) error {
+func (m MerchantService) Upsert(ctx context.Context, merchant model.Merchant) error {
 	return m.merchantRepository.Upsert(ctx, merchant)
 }
 

@@ -8,7 +8,7 @@ import (
 )
 
 type OwnerService interface {
-	CreateOrUpdate(context.Context, model.Owner) error
+	Upsert(context.Context, model.Owner) error
 }
 
 type OwnerProcessor struct {
@@ -22,7 +22,7 @@ func NewOwnerProcessor(ownerService OwnerService) OwnerProcessor {
 }
 
 func (oep OwnerProcessor) OwnerProcessor(message model.OwnerEvent) (returnErr error) {
-	oep.ownerService.CreateOrUpdate(context.Background(), model.Owner{
+	return oep.ownerService.Upsert(context.Background(), model.Owner{
 		Id:        message.Id,
 		Email:     strings.ToUpper(message.Email),
 		Status:    model.OwnerStatus(message.Status),
@@ -31,6 +31,4 @@ func (oep OwnerProcessor) OwnerProcessor(message model.OwnerEvent) (returnErr er
 		CreatedAt: message.EventTime,
 		UpdatedAt: message.EventTime,
 	})
-
-	return nil
 }

@@ -8,7 +8,7 @@ import (
 )
 
 type SlugService interface {
-	CreateOrUpdate(context.Context, model.Slug) error
+	Upsert(context.Context, model.Slug) error
 }
 
 type SlugProcessor struct {
@@ -22,7 +22,7 @@ func NewSlugProcessor(slugService SlugService) SlugProcessor {
 }
 
 func (sp SlugProcessor) SlugProcessor(message model.SlugEvent) (returnErr error) {
-	sp.slugService.CreateOrUpdate(context.Background(), model.Slug{
+	return sp.slugService.Upsert(context.Background(), model.Slug{
 		Id:        message.Id,
 		Name:      strings.ToUpper(message.Name),
 		Status:    model.SlugStatus(message.Status),
@@ -32,6 +32,4 @@ func (sp SlugProcessor) SlugProcessor(message model.SlugEvent) (returnErr error)
 		CreatedAt: message.EventTime,
 		UpdatedAt: message.EventTime,
 	})
-
-	return nil
 }

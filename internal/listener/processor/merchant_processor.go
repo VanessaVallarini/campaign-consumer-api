@@ -9,7 +9,7 @@ import (
 )
 
 type MerchantService interface {
-	CreateOrUpdate(context.Context, model.Merchant) error
+	Upsert(context.Context, model.Merchant) error
 }
 
 type MerchantProcessor struct {
@@ -25,7 +25,7 @@ func NewMerchantProcessor(merchantService MerchantService) MerchantProcessor {
 func (mp MerchantProcessor) MerchantProcessor(message model.MerchantEvent) (returnErr error) {
 	name := strings.ToUpper(message.Name)
 
-	mp.merchantService.CreateOrUpdate(context.Background(), model.Merchant{
+	return mp.merchantService.Upsert(context.Background(), model.Merchant{
 		Id:        message.Id,
 		OwnerId:   message.OwnerId,
 		RegionId:  message.RegionId,
@@ -37,8 +37,6 @@ func (mp MerchantProcessor) MerchantProcessor(message model.MerchantEvent) (retu
 		CreatedAt: message.EventTime,
 		UpdatedAt: message.EventTime,
 	})
-
-	return nil
 }
 
 func (mp MerchantProcessor) convertSlugs(slugs []string) []uuid.UUID {

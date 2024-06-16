@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS merchant (
     updated_by VARCHAR(60),
     created_at TIMESTAMP WITH TIME ZONE,
     updated_at TIMESTAMP WITH TIME ZONE,
-    FOREIGN KEY (owner_id) REFERENCES owner(email),
+    FOREIGN KEY (owner_id) REFERENCES owner(id),
     FOREIGN KEY (region_id) REFERENCES region(id)
 );
 

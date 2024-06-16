@@ -22,7 +22,7 @@ func NewSlugService(slugRepository SlugRepository) SlugService {
 	}
 }
 
-func (s SlugService) CreateOrUpdate(ctx context.Context, slug model.Slug) error {
+func (s SlugService) Upsert(ctx context.Context, slug model.Slug) error {
 	return s.slugRepository.Upsert(ctx, slug)
 }
 

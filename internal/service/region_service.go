@@ -22,7 +22,7 @@ func NewRegionService(regionRepository RegionRepository) RegionService {
 	}
 }
 
-func (r RegionService) CreateOrUpdate(ctx context.Context, region model.Region) error {
+func (r RegionService) Upsert(ctx context.Context, region model.Region) error {
 	return r.regionRepository.Upsert(ctx, region)
 }
 

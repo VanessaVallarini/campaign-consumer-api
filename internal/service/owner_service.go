@@ -20,6 +20,6 @@ func NewOwnerService(ownerRepository OwnerRepository) OwnerService {
 	}
 }
 
-func (o OwnerService) CreateOrUpdate(ctx context.Context, owner model.Owner) error {
+func (o OwnerService) Upsert(ctx context.Context, owner model.Owner) error {
 	return o.ownerRepository.Upsert(ctx, owner)
 }

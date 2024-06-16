@@ -8,7 +8,7 @@ import (
 )
 
 type RegionService interface {
-	CreateOrUpdate(context.Context, model.Region) error
+	Upsert(context.Context, model.Region) error
 }
 
 type RegionProcessor struct {
@@ -22,7 +22,7 @@ func NewRegionProcessor(regionService RegionService) RegionProcessor {
 }
 
 func (rp RegionProcessor) RegionProcessor(message model.RegionEvent) (returnErr error) {
-	rp.regionService.CreateOrUpdate(context.Background(), model.Region{
+	return rp.regionService.Upsert(context.Background(), model.Region{
 		Id:        message.Id,
 		Name:      strings.ToUpper(message.Name),
 		Status:    model.RegionStatus(message.Status),
@@ -34,6 +34,4 @@ func (rp RegionProcessor) RegionProcessor(message model.RegionEvent) (returnErr 
 		CreatedAt: message.EventTime,
 		UpdatedAt: message.EventTime,
 	})
-
-	return nil
 }

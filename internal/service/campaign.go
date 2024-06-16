@@ -22,7 +22,7 @@ func NewCampaignService(campaignRepository CampaignRepository) CampaignService {
 	}
 }
 
-func (c CampaignService) CreateOrUpdate(ctx context.Context, campaign model.Campaign) error {
+func (c CampaignService) Upsert(ctx context.Context, campaign model.Campaign) error {
 	return c.campaignRepository.Upsert(ctx, campaign)
 }
 

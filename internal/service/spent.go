@@ -21,6 +21,6 @@ func NewSpentService(spentRepository SpentRepository) SpentService {
 	}
 }
 
-func (s SpentService) CreateOrUpdate(ctx context.Context, tx transaction.Transaction, spent model.Spent) error {
+func (s SpentService) Upsert(ctx context.Context, tx transaction.Transaction, spent model.Spent) error {
 	return s.spentRepository.Upsert(ctx, tx, spent)
 }
