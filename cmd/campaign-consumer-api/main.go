@@ -7,10 +7,10 @@ import (
 	"syscall"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/api"
-	"github.com/VanessaVallarini/campaign-consumer-api/internal/client"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/config"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/consumer"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/handler"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/processor"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/repository"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/service"
@@ -70,11 +70,11 @@ func main() {
 	campaignHandler := handler.MakeCampaignEventHandler(campaignProcessor)
 
 	// client
-	ownerSrClient := client.NewSchemaRegistry(cfg.KafkaOwner)
-	slugSrClient := client.NewSchemaRegistry(cfg.KafkaSlug)
-	regionSrClient := client.NewSchemaRegistry(cfg.KafkaRegion)
-	merchantSrClient := client.NewSchemaRegistry(cfg.KafkaMerchant)
-	campaignSrClient := client.NewSchemaRegistry(cfg.KafkaCampaign)
+	ownerSrClient := kafka.NewSchemaRegistry(cfg.KafkaOwner)
+	slugSrClient := kafka.NewSchemaRegistry(cfg.KafkaSlug)
+	regionSrClient := kafka.NewSchemaRegistry(cfg.KafkaRegion)
+	merchantSrClient := kafka.NewSchemaRegistry(cfg.KafkaMerchant)
+	campaignSrClient := kafka.NewSchemaRegistry(cfg.KafkaCampaign)
 
 	//consumer
 	ownerConsumer := consumer.NewConsumer(ctx, cfg.KafkaOwner, ownerSrClient, ownerHandler)

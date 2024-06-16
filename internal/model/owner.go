@@ -24,11 +24,11 @@ type Owner struct {
 }
 
 type OwnerEvent struct {
-	Id        string `json:"id" avro:"id"`
-	Email     string `json:"email" avro:"email"`
-	Status    string `json:"status" avro:"status"`
-	CreatedBy string `json:"created_by" avro:"created_by"`
-	UpdatedBy string `json:"updated_by" avro:"updated_by"`
+	Id        uuid.UUID `avro:"id"`
+	Email     string    `avro:"email"`
+	Status    string    `avro:"status"`
+	User      string    `avro:"user"`
+	EventTime time.Time `avro:"eventTime"`
 }
 
 const (
@@ -37,26 +37,32 @@ const (
 		"name":"owner",
 		"namespace":"campaign.campaign_owner_value",
 		"fields":[
-			 {
-				"name":"id",
-				"type":"string"
-			 },
-			 {
+			{
+				"name": "id",
+				"type": {
+				"type": "string",
+				"logicalType": "UUID"
+				}
+			},
+			{
 				"name":"email",
 				"type":"string"
-			 },
-			 {
+			},
+			{
 				"name":"status",
 				"type":"string"
-			 },
-			 {
-				"name":"created_by",
+			},
+			{
+				"name":"user",
 				"type":"string"
-			 },
-			 {
-				"name":"updated_by",
-				"type":"string"
-			 }		   
+			},
+			{
+				"name": "eventTime",
+				"type": {
+				"type": "long",
+				"logicalType": "timestamp-millis"
+				}
+			}	   
 		]
 	 }`
 )

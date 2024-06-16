@@ -1,8 +1,7 @@
-package client
+package kafka
 
 import (
-	"encoding/json"
-	"errors"
+	"github.com/pkg/errors"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/config"
 	"github.com/hamba/avro"
@@ -35,14 +34,9 @@ func (sr SchemaRegistryClient) Decode(data []byte, value interface{}, subject st
 		return err
 	}
 
-	errAvro := avro.Unmarshal(schemaDecoder, data, value)
+	errAvro := avro.Unmarshal(schemaDecoder, data[5:], value)
 	if errAvro != nil {
-		//ignorando pq está dando erro
-	}
-
-	err = json.Unmarshal(data, value)
-	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to avro unmarshal")
 	}
 
 	return nil
@@ -55,7 +49,7 @@ func (sr SchemaRegistryClient) getSchema(subject string) (*srclient.Schema, erro
 	}
 
 	if schema == nil {
-		return nil, errors.New("schema registry unexpected behavior retrieving schema, got 'nil' from registry")
+		return nil, errors.New("Schema registry unexpected behavior retrieving schema, got 'nil' from registry")
 	}
 
 	return schema, nil

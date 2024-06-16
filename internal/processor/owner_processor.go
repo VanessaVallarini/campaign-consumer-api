@@ -2,10 +2,10 @@ package processor
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
-	"github.com/google/uuid"
 )
 
 type OwnerService interface {
@@ -24,11 +24,11 @@ func NewOwnerProcessor(ownerService OwnerService) OwnerProcessor {
 
 func (oep OwnerProcessor) OwnerProcessor(message model.OwnerEvent) (returnErr error) {
 	oep.ownerService.CreateOrUpdate(context.Background(), model.Owner{
-		Id:        uuid.MustParse(message.Id),
-		Email:     message.Email,
+		Id:        message.Id,
+		Email:     strings.ToUpper(message.Email),
 		Status:    model.OwnerStatus(message.Status),
-		CreatedBy: message.CreatedBy,
-		UpdatedBy: message.UpdatedBy,
+		CreatedBy: message.User,
+		UpdatedBy: message.User,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	})

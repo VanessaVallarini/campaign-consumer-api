@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/IBM/sarama"
-	"github.com/VanessaVallarini/campaign-consumer-api/internal/client"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka"
 	easyzap "github.com/lockp111/go-easyzap"
 )
 
@@ -13,8 +13,8 @@ type RegionProcessor interface {
 	RegionProcessor(model.RegionEvent) error
 }
 
-func MakeRegionEventHandler(processor RegionProcessor) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
-	return func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
+func MakeRegionEventHandler(processor RegionProcessor) func(msg *sarama.ConsumerMessage, srClient kafka.SchemaRegistryClient, subject string) error {
+	return func(msg *sarama.ConsumerMessage, srClient kafka.SchemaRegistryClient, subject string) error {
 		if msg == nil {
 			easyzap.Error("invalid message pointer")
 

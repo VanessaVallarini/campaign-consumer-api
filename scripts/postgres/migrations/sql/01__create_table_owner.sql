@@ -7,3 +7,5 @@ CREATE TABLE IF NOT EXISTS owner (
     created_at TIMESTAMP WITH TIME ZONE,
     updated_at TIMESTAMP WITH TIME ZONE
 );
+
+CREATE INDEX owner_id ON campaign_consumer_api.owner USING btree (id);
