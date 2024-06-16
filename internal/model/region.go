@@ -27,54 +27,60 @@ type Region struct {
 }
 
 type RegionEvent struct {
-	Id        string  `avro:"id"`
-	Name      string  `avro:"name"`
-	Status    string  `avro:"status"`
-	Lat       float64 `avro:"lat"`
-	Long      float64 `avro:"long"`
-	Cost      float64 `avro:"cost"`
-	CreatedBy string  `avro:"created_by"`
-	UpdatedBy string  `avro:"updated_by"`
+	Id        uuid.UUID `avro:"id"`
+	Name      string    `avro:"name"`
+	Status    string    `avro:"status"`
+	Lat       float64   `avro:"lat"`
+	Long      float64   `avro:"long"`
+	Cost      float64   `avro:"cost"`
+	User      string    `avro:"user"`
+	EventTime time.Time `avro:"eventTime"`
 }
 
 const (
 	RegionAvro = `{
 		"type":"record",
 		"name":"region",
-		"namespace":"campaign.campaign_rregion_value",
+		"namespace":"campaign.campaign_region_value",
 		"fields":[
-			 {
-				"name":"id",
-				"type":"string"
-			 },
-			 {
+			{
+				"name": "id",
+				"type": {
+				"type": "string",
+				"logicalType": "UUID"
+				}
+			},
+			{
 				"name":"name",
 				"type":"string"
-			 },
-			 {
+			},
+			{
 				"name":"status",
 				"type":"string"
-			 },
-			 {
+			},
+			{
 				"name":"lat",
 				"type":"double"
-			 },
-			 {
+			},
+			{
 				"name":"long",
 				"type":"double"
-			 },
-			 {
+			},
+			{
 				"name":"cost",
 				"type":"double"
-			 },
-			 {
-				"name":"created_by",
+			},
+			{
+				"name":"user",
 				"type":"string"
-			 },
-			 {
-				"name":"updated_by",
-				"type":"string"
-			 }		   
+			},
+			{
+				"name": "eventTime",
+				"type": {
+				"type": "long",
+				"logicalType": "timestamp-millis"
+				}
+			}		   
 		]
 	 }`
 )

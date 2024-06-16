@@ -3,10 +3,8 @@ package processor
 import (
 	"context"
 	"strings"
-	"time"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
-	"github.com/google/uuid"
 )
 
 type RegionService interface {
@@ -24,19 +22,17 @@ func NewRegionProcessor(regionService RegionService) RegionProcessor {
 }
 
 func (rp RegionProcessor) RegionProcessor(message model.RegionEvent) (returnErr error) {
-	name := strings.ToUpper(message.Name)
-
 	rp.regionService.CreateOrUpdate(context.Background(), model.Region{
-		Id:        uuid.MustParse(message.Id),
-		Name:      name,
+		Id:        message.Id,
+		Name:      strings.ToUpper(message.Name),
 		Status:    model.RegionStatus(message.Status),
 		Lat:       message.Lat,
 		Long:      message.Long,
 		Cost:      message.Cost,
-		CreatedBy: message.CreatedBy,
-		UpdatedBy: message.UpdatedBy,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedBy: message.User,
+		UpdatedBy: message.User,
+		CreatedAt: message.EventTime,
+		UpdatedAt: message.EventTime,
 	})
 
 	return nil
