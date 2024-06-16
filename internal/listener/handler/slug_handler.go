@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"errors"
 
 	"github.com/IBM/sarama"
@@ -9,11 +10,11 @@ import (
 	easyzap "github.com/lockp111/go-easyzap"
 )
 
-type SlugProcessor interface {
-	SlugProcessor(model.SlugEvent) error
+type SlugService interface {
+	Upsert(context.Context, model.Slug) error
 }
 
-func MakeSlugEventHandler(processor SlugProcessor) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
+func MakeSlugEventHandler(slugService SlugService) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
 	return func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
 		if msg == nil {
 			easyzap.Error("invalid message pointer")
@@ -22,15 +23,15 @@ func MakeSlugEventHandler(processor SlugProcessor) func(msg *sarama.ConsumerMess
 		}
 
 		// Decode msg.Value into model.SlugEvent
-		var slugEvent model.SlugEvent
-		if err := srClient.Decode(msg.Value, &slugEvent, subject); err != nil {
+		var slug model.Slug
+		if err := srClient.Decode(msg.Value, &slug, subject); err != nil {
 			easyzap.Error(err, "error during decode message consumer kafka on create or update slug")
 
 			return err
 		}
 
-		easyzap.Infof("got slug event for %s", slugEvent.Name)
-		if err := processor.SlugProcessor(slugEvent); err != nil {
+		easyzap.Infof("got slug event for %s", slug.Name)
+		if err := slugService.Upsert(context.Background(), slug); err != nil {
 
 			return err
 		}

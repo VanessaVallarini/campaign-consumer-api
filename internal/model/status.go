@@ -3,6 +3,13 @@ package model
 type OwnerStatus string
 
 const (
-	Active   OwnerStatus = "ACTIVE"
-	Inactive OwnerStatus = "INACTIVE"
+	ActiveOwner   OwnerStatus = "ACTIVE"
+	InactiveOwner OwnerStatus = "INACTIVE"
+)
+
+type SlugStatus string
+
+const (
+	ActiveSlug   SlugStatus = "ACTIVE"
+	InactiveSlug SlugStatus = "INACTIVE"
 )

@@ -41,7 +41,7 @@ func (o OwnerService) Upsert(ctx context.Context, owner model.Owner) error {
 
 func (o OwnerService) isValidStatus(status string) error {
 	modelStatus := model.OwnerStatus(status)
-	if modelStatus != model.Active && modelStatus != model.Inactive {
+	if modelStatus != model.ActiveOwner && modelStatus != model.InactiveOwner {
 		easyzap.Errorf("invalid owner status %s", status)
 
 		return errors.New("Invalid owner status")

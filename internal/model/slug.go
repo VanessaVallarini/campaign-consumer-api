@@ -6,33 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type SlugStatus string
-
-const (
-	ActiveSlug   SlugStatus = "ACTIVE"
-	InactiveSlug SlugStatus = "INACTIVE"
-)
-
-type Slug struct {
-	Id        uuid.UUID  `json:"id"`
-	Name      string     `json:"name"`
-	Status    SlugStatus `json:"status"`
-	Cost      float64    `json:"cost"`
-	CreatedBy string     `json:"created_by"`
-	UpdatedBy string     `json:"updated_by"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-}
-
-type SlugEvent struct {
-	Id        uuid.UUID `avro:"id"`
-	Name      string    `avro:"name"`
-	Status    string    `avro:"status"`
-	Cost      float64   `avro:"cost"`
-	User      string    `avro:"user"`
-	EventTime time.Time `avro:"even_time"`
-}
-
 const (
 	SlugAvro = `{
 		"type":"record",
@@ -59,11 +32,22 @@ const (
 				"type":"double"
 			},
 			{
-				"name":"user",
+				"name":"created_by",
 				"type":"string"
 			},
 			{
-				"name": "even_time",
+				"name":"updated_by",
+				"type":"string"
+			},
+			{
+				"name": "created_at",
+				"type": {
+				"type": "long",
+				"logicalType": "timestamp-millis"
+				}
+			},
+			{
+				"name": "updated_at",
 				"type": {
 				"type": "long",
 				"logicalType": "timestamp-millis"
@@ -72,3 +56,14 @@ const (
 		]
 	 }`
 )
+
+type Slug struct {
+	Id        uuid.UUID `json:"id" avro:"id"`
+	Name      string    `json:"name" avro:"name"`
+	Status    string    `json:"status" avro:"status"`
+	Cost      float64   `json:"cost" avro:"cost"`
+	CreatedBy string    `json:"created_by" avro:"created_by"`
+	UpdatedBy string    `json:"updated_by" avro:"updated_by"`
+	CreatedAt time.Time `json:"created_at" avro:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" avro:"updated_at"`
+}
