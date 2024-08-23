@@ -10,12 +10,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-type SlugRepository struct {
+type SlugDao struct {
 	pool *pgxpool.Pool
 }
 
-func NewSlugRepository(pool *pgxpool.Pool) SlugRepository {
-	return SlugRepository{
+func NewSlugRepository(pool *pgxpool.Pool) SlugDao {
+
+	return SlugDao{
 		pool: pool,
 	}
 }
@@ -56,8 +57,8 @@ var upsertSlugQuery = `
 		OR slug.cost <> EXCLUDED.cost;
 `
 
-func (s SlugRepository) Upsert(ctx context.Context, slug model.Slug) error {
-	_, err := s.pool.Exec(
+func (sd SlugDao) Upsert(ctx context.Context, slug model.Slug) error {
+	_, err := sd.pool.Exec(
 		ctx,
 		upsertSlugQuery,
 		slug.Id,
@@ -70,18 +71,19 @@ func (s SlugRepository) Upsert(ctx context.Context, slug model.Slug) error {
 		slug.UpdatedAt,
 	)
 	if err != nil {
+
 		return errors.Wrap(err, "Failed to create or update slug in database")
 	}
 
 	return nil
 }
 
-func (s SlugRepository) Fetch(ctx context.Context, id uuid.UUID) (model.Slug, error) {
+func (sd SlugDao) Fetch(ctx context.Context, id uuid.UUID) (model.Slug, error) {
 	var slug model.Slug
 
 	query := `SELECT ` + allSlugFields + ` from slug WHERE id = $1`
 
-	row := s.pool.QueryRow(ctx, query, id)
+	row := sd.pool.QueryRow(ctx, query, id)
 	err := row.Scan(
 		&slug.Id, &slug.Name, &slug.Status, &slug.Cost, &slug.CreatedBy,
 		&slug.UpdatedBy, &slug.CreatedAt, &slug.UpdatedAt,
@@ -89,8 +91,10 @@ func (s SlugRepository) Fetch(ctx context.Context, id uuid.UUID) (model.Slug, er
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
+
 			return model.Slug{}, errors.Wrap(err, "Slug not found")
 		}
+
 		return model.Slug{}, errors.Wrap(err, "Failed to fetch slug in database")
 	}
 

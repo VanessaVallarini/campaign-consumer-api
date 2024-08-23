@@ -22,7 +22,6 @@ func MakeSlugEventHandler(slugService SlugService) func(msg *sarama.ConsumerMess
 			return errors.New("Invalid message pointer")
 		}
 
-		// Decode msg.Value into model.Slug
 		var slug model.Slug
 		if err := srClient.Decode(msg.Value, &slug, subject); err != nil {
 			easyzap.Error(err, "error during decode message consumer kafka on create or update slug")
@@ -30,7 +29,6 @@ func MakeSlugEventHandler(slugService SlugService) func(msg *sarama.ConsumerMess
 			return err
 		}
 
-		easyzap.Infof("got slug event for %s", slug.Name)
 		if err := slugService.Upsert(context.Background(), slug); err != nil {
 
 			return err

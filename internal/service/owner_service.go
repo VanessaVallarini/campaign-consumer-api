@@ -12,17 +12,19 @@ type OwnerDao interface {
 }
 
 type OwnerService struct {
-	ownerRepository OwnerDao
+	ownerDao OwnerDao
 }
 
-func NewOwnerService(ownerRepository OwnerDao) OwnerService {
+func NewOwnerService(ownerDao OwnerDao) OwnerService {
+
 	return OwnerService{
-		ownerRepository: ownerRepository,
+		ownerDao: ownerDao,
 	}
 }
 
 func (os OwnerService) Upsert(ctx context.Context, owner model.Owner) error {
-	return os.ownerRepository.Upsert(ctx, model.Owner{
+
+	return os.ownerDao.Upsert(ctx, model.Owner{
 		Id:        owner.Id,
 		Email:     strings.ToUpper(owner.Email),
 		Status:    owner.Status,

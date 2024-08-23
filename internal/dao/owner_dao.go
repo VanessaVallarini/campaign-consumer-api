@@ -53,6 +53,7 @@ func (od OwnerDao) Upsert(ctx context.Context, owner model.Owner) error {
 		owner.UpdatedAt,
 	)
 	if err != nil {
+
 		return errors.Wrap(err, "Failed to create or update owner in database")
 	}
 
