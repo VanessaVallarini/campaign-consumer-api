@@ -43,9 +43,9 @@ func main() {
 
 	// repository
 	pool := postgres.CreatePool(ctx, &cfg.Database)
-	ownerRepository := dao.NewOwnerRepository(pool)
-	slugRepository := dao.NewSlugRepository(pool)
-	regionRepository := dao.NewRegionRepository(pool)
+	ownerRepository := dao.NewOwnerDao(pool)
+	slugRepository := dao.NewSlugDao(pool)
+	regionRepository := dao.NewRegionDao(pool)
 	merchantRepository := dao.NewMerchantRepository(pool)
 	campaignRepository := dao.NewCampaignRepository(pool)
 

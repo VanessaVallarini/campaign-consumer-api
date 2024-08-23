@@ -10,12 +10,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-type RegionRepository struct {
+type RegionDao struct {
 	pool *pgxpool.Pool
 }
 
-func NewRegionRepository(pool *pgxpool.Pool) RegionRepository {
-	return RegionRepository{
+func NewRegionDao(pool *pgxpool.Pool) RegionDao {
+	return RegionDao{
 		pool: pool,
 	}
 }
@@ -64,8 +64,8 @@ var upsertRegionQuery = `
 		OR region.cost <> EXCLUDED.cost;
 `
 
-func (r RegionRepository) Upsert(ctx context.Context, region model.Region) error {
-	_, err := r.pool.Exec(
+func (rd RegionDao) Upsert(ctx context.Context, region model.Region) error {
+	_, err := rd.pool.Exec(
 		ctx,
 		upsertRegionQuery,
 		region.Id,
@@ -86,12 +86,12 @@ func (r RegionRepository) Upsert(ctx context.Context, region model.Region) error
 	return nil
 }
 
-func (r RegionRepository) Fetch(ctx context.Context, id uuid.UUID) (model.Region, error) {
+func (rd RegionDao) Fetch(ctx context.Context, id uuid.UUID) (model.Region, error) {
 	var region model.Region
 
 	query := `SELECT ` + allRegionFields + ` from region WHERE id = $1`
 
-	row := r.pool.QueryRow(ctx, query, id)
+	row := rd.pool.QueryRow(ctx, query, id)
 	err := row.Scan(
 		&region.Id, &region.Name, &region.Status, &region.Lat,
 		&region.Long, &region.Cost, &region.CreatedBy,

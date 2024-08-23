@@ -12,7 +12,7 @@ type OwnerDao struct {
 	pool *pgxpool.Pool
 }
 
-func NewOwnerRepository(pool *pgxpool.Pool) OwnerDao {
+func NewOwnerDao(pool *pgxpool.Pool) OwnerDao {
 	return OwnerDao{
 		pool: pool,
 	}

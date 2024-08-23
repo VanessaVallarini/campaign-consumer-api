@@ -9,8 +9,8 @@ import (
 const (
 	RegionAvro = `{
 		"type":"record",
-		"name":"slug",
-		"namespace":"campaign.campaign_slug_value",
+		"name":"region",
+		"namespace":"campaign.campaign_region_value",
 		"fields":[
 			{
 				"name": "id",

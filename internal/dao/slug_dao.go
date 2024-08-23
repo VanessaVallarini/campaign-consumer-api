@@ -14,7 +14,7 @@ type SlugDao struct {
 	pool *pgxpool.Pool
 }
 
-func NewSlugRepository(pool *pgxpool.Pool) SlugDao {
+func NewSlugDao(pool *pgxpool.Pool) SlugDao {
 
 	return SlugDao{
 		pool: pool,

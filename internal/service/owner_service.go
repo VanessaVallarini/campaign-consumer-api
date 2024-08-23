@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"strings"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
 )
@@ -24,13 +23,5 @@ func NewOwnerService(ownerDao OwnerDao) OwnerService {
 
 func (os OwnerService) Upsert(ctx context.Context, owner model.Owner) error {
 
-	return os.ownerDao.Upsert(ctx, model.Owner{
-		Id:        owner.Id,
-		Email:     strings.ToUpper(owner.Email),
-		Status:    owner.Status,
-		CreatedBy: owner.CreatedBy,
-		UpdatedBy: owner.UpdatedBy,
-		CreatedAt: owner.CreatedAt,
-		UpdatedAt: owner.UpdatedAt,
-	})
+	return os.ownerDao.Upsert(ctx, owner)
 }

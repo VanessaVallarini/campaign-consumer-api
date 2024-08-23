@@ -22,7 +22,6 @@ func MakeRegionEventHandler(regionService RegionService) func(msg *sarama.Consum
 			return errors.New("Invalid message pointer")
 		}
 
-		// Decode msg.Value into model.Region
 		var region model.Region
 		if err := srClient.Decode(msg.Value, &region, subject); err != nil {
 			easyzap.Error(err, "error during decode message consumer kafka on create or update region")
@@ -30,7 +29,6 @@ func MakeRegionEventHandler(regionService RegionService) func(msg *sarama.Consum
 			return err
 		}
 
-		easyzap.Infof("got region event for %s", region.Name)
 		if err := regionService.Upsert(context.Background(), region); err != nil {
 
 			return err
