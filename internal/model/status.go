@@ -20,3 +20,10 @@ const (
 	ActiveRegion   RegionStatus = "ACTIVE"
 	InactiveRegion RegionStatus = "INACTIVE"
 )
+
+type MerchantStatus string
+
+const (
+	ActiveMerchant   MerchantStatus = "ACTIVE"
+	InactiveMerchant MerchantStatus = "INACTIVE"
+)

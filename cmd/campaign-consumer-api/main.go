@@ -57,14 +57,13 @@ func main() {
 	campaignService := service.NewCampaignService(campaignRepository)
 
 	// processor
-	merchantProcessor := processor.NewMerchantProcessor(merchantService)
 	campaignProcessor := processor.NewCampaignProcessor(campaignService)
 
 	// handler
 	ownerHandler := handler.MakeOwnerEventHandler(ownerService)
 	slugHandler := handler.MakeSlugEventHandler(slugService)
 	regionHandler := handler.MakeRegionEventHandler(regionService)
-	merchantHandler := handler.MakeMerchantEventHandler(merchantProcessor)
+	merchantHandler := handler.MakeMerchantEventHandler(merchantService)
 	campaignHandler := handler.MakeCampaignEventHandler(campaignProcessor)
 
 	// client

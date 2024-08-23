@@ -8,12 +8,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-type OwnerRepository struct {
+type OwnerDao struct {
 	pool *pgxpool.Pool
 }
 
-func NewOwnerRepository(pool *pgxpool.Pool) OwnerRepository {
-	return OwnerRepository{
+func NewOwnerRepository(pool *pgxpool.Pool) OwnerDao {
+	return OwnerDao{
 		pool: pool,
 	}
 }
@@ -40,8 +40,8 @@ var upsertOwnerQuery = `
 		OR owner.status <> EXCLUDED.status;
 `
 
-func (o OwnerRepository) Upsert(ctx context.Context, owner model.Owner) error {
-	_, err := o.pool.Exec(
+func (od OwnerDao) Upsert(ctx context.Context, owner model.Owner) error {
+	_, err := od.pool.Exec(
 		ctx,
 		upsertOwnerQuery,
 		owner.Id,

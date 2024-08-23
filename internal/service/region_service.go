@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
 	"github.com/google/uuid"
@@ -29,7 +30,18 @@ func (r RegionService) Upsert(ctx context.Context, region model.Region) error {
 		return err
 	}
 
-	return r.regionRepository.Upsert(ctx, region)
+	return r.regionRepository.Upsert(ctx, model.Region{
+		Id:        region.Id,
+		Name:      strings.ToUpper(region.Name),
+		Status:    region.Status,
+		Lat:       region.Lat,
+		Long:      region.Long,
+		Cost:      region.Cost,
+		CreatedBy: region.CreatedBy,
+		UpdatedBy: region.UpdatedBy,
+		CreatedAt: region.CreatedAt,
+		UpdatedAt: region.UpdatedAt,
+	})
 }
 
 func (r RegionService) Fetch(ctx context.Context, id uuid.UUID) (model.Region, error) {

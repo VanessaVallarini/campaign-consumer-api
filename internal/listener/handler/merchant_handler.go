@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"errors"
 
 	"github.com/IBM/sarama"
@@ -9,11 +10,11 @@ import (
 	easyzap "github.com/lockp111/go-easyzap"
 )
 
-type MerchantProcessor interface {
-	MerchantProcessor(model.MerchantEvent) error
+type MerchantService interface {
+	Upsert(context.Context, model.Merchant) error
 }
 
-func MakeMerchantEventHandler(processor MerchantProcessor) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
+func MakeMerchantEventHandler(merchantService MerchantService) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
 	return func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
 		if msg == nil {
 			easyzap.Error("invalid message pointer")
@@ -21,16 +22,16 @@ func MakeMerchantEventHandler(processor MerchantProcessor) func(msg *sarama.Cons
 			return errors.New("Invalid message pointer")
 		}
 
-		// Decode msg.Value into model.MerchantEvent
-		var merchantEvent model.MerchantEvent
-		if err := srClient.Decode(msg.Value, &merchantEvent, subject); err != nil {
+		// Decode msg.Value into model.Merchant
+		var merchant model.Merchant
+		if err := srClient.Decode(msg.Value, &merchant, subject); err != nil {
 			easyzap.Error(err, "error during decode message consumer kafka on create or update merchant")
 
 			return err
 		}
 
-		easyzap.Infof("got merchant event for %s", merchantEvent.Name)
-		if err := processor.MerchantProcessor(merchantEvent); err != nil {
+		easyzap.Infof("got merchant event for %s", merchant.Name)
+		if err := merchantService.Upsert(context.Background(), merchant); err != nil {
 
 			return err
 		}
