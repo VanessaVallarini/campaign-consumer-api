@@ -2,8 +2,6 @@ CREATE TABLE IF NOT EXISTS campaign(
     id  UUID PRIMARY KEY NOT NULL,
     merchant_id  UUID NOT NULL,
     status VARCHAR(10) DEFAULT 'ACTIVE',
-    lat FLOAT NOT NULL,
-    long FLOAT NOT NULL,
     budget DECIMAL(5,2) NOT NULL,
     created_by VARCHAR(60),
     updated_by VARCHAR(60),

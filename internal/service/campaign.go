@@ -5,27 +5,35 @@ import (
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
 	"github.com/google/uuid"
+	easyzap "github.com/lockp111/go-easyzap"
 )
 
-type CampaignRepository interface {
+type CampaignDao interface {
 	Upsert(context.Context, model.Campaign) error
 	Fetch(context.Context, uuid.UUID) (model.Campaign, error)
 }
 
 type CampaignService struct {
-	campaignRepository CampaignRepository
+	campaignDao CampaignDao
 }
 
-func NewCampaignService(campaignRepository CampaignRepository) CampaignService {
+func NewCampaignService(campaignDao CampaignDao) CampaignService {
 	return CampaignService{
-		campaignRepository: campaignRepository,
+		campaignDao: campaignDao,
 	}
 }
 
-func (c CampaignService) Upsert(ctx context.Context, campaign model.Campaign) error {
-	return c.campaignRepository.Upsert(ctx, campaign)
+func (cs CampaignService) Upsert(ctx context.Context, campaign model.Campaign) error {
+	err := campaign.ValidateCampaign()
+	if err != nil {
+		easyzap.Error(err, "upsert merchant fail : %w", err)
+
+		return model.ErrInvalid
+	}
+
+	return cs.campaignDao.Upsert(ctx, campaign)
 }
 
-func (c CampaignService) Fetch(ctx context.Context, id uuid.UUID) (model.Campaign, error) {
-	return c.campaignRepository.Fetch(ctx, id)
+func (cs CampaignService) Fetch(ctx context.Context, id uuid.UUID) (model.Campaign, error) {
+	return cs.campaignDao.Fetch(ctx, id)
 }

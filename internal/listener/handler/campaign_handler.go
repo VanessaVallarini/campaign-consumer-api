@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"errors"
 
 	"github.com/IBM/sarama"
@@ -9,11 +10,11 @@ import (
 	easyzap "github.com/lockp111/go-easyzap"
 )
 
-type CampaignProcessor interface {
-	CampaignProcessor(model.CampaignEvent) error
+type CampaignService interface {
+	Upsert(context.Context, model.Campaign) error
 }
 
-func MakeCampaignEventHandler(processor CampaignProcessor) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
+func MakeCampaignEventHandler(campaignService CampaignService) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
 	return func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
 		if msg == nil {
 			easyzap.Error("invalid message pointer")
@@ -21,16 +22,14 @@ func MakeCampaignEventHandler(processor CampaignProcessor) func(msg *sarama.Cons
 			return errors.New("Invalid message pointer")
 		}
 
-		// Decode msg.Value into model.CampaignEvent
-		var campaignEvent model.CampaignEvent
-		if err := srClient.Decode(msg.Value, &campaignEvent, subject); err != nil {
+		var campaign model.Campaign
+		if err := srClient.Decode(msg.Value, &campaign, subject); err != nil {
 			easyzap.Error(err, "error during decode message consumer kafka on create or update campaign")
 
 			return err
 		}
 
-		easyzap.Infof("got campaign event for merchant id %s", campaignEvent.MerchantId)
-		if err := processor.CampaignProcessor(campaignEvent); err != nil {
+		if err := campaignService.Upsert(context.Background(), campaign); err != nil {
 
 			return err
 		}

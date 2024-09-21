@@ -1,41 +1,12 @@
 package model
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 )
-
-type CampaignStatus string
-
-const (
-	ActiveCampaign   CampaignStatus = "ACTIVE"
-	InactiveCampaign CampaignStatus = "INACTIVE"
-)
-
-type Campaign struct {
-	Id         uuid.UUID      `json:"id"`
-	MerchantId uuid.UUID      `json:"merchant_id"`
-	Status     CampaignStatus `json:"status"`
-	Lat        float64        `json:"lat"`
-	Long       float64        `json:"long"`
-	Budget     float64        `json:"budget"`
-	CreatedBy  string         `json:"created_by"`
-	UpdatedBy  string         `json:"updated_by"`
-	CreatedAt  time.Time      `json:"created_at"`
-	UpdatedAt  time.Time      `json:"updated_at"`
-}
-
-type CampaignEvent struct {
-	Id         uuid.UUID `avro:"id"`
-	MerchantId uuid.UUID `avro:"merchant_id"`
-	Status     string    `avro:"status"`
-	Lat        float64   `avro:"lat"`
-	Long       float64   `avro:"long"`
-	Budget     float64   `avro:"budget"`
-	User       string    `avro:"user"`
-	EventTime  time.Time `avro:"even_time"`
-}
 
 const (
 	CampaignAvro = `{
@@ -62,28 +33,66 @@ const (
 				"type":"string"
 			},
 			{
-				"name":"lat",
-				"type":"double"
-			},
-			{
-				"name":"long",
-				"type":"double"
-			},
-			{
 				"name":"budget",
 				"type":"double"
 			},
 			{
-				"name":"user",
+				"name":"created_by",
 				"type":"string"
 			},
 			{
-				"name": "even_time",
+				"name":"updated_by",
+				"type":"string"
+			},
+			{
+				"name": "created_at",
 				"type": {
 				"type": "long",
 				"logicalType": "timestamp-millis"
 				}
-			}  
+			},
+			{
+				"name": "updated_at",
+				"type": {
+				"type": "long",
+				"logicalType": "timestamp-millis"
+				}
+			}
 		]
 	 }`
 )
+
+type Campaign struct {
+	Id         uuid.UUID `json:"id" avro:"id"`
+	MerchantId uuid.UUID `json:"merchant_id" avro:"merchant_id"`
+	Status     string    `json:"status" avro:"status"`
+	Budget     float64   `json:"budget" avro:"budget"`
+	CreatedBy  string    `json:"created_by" avro:"created_by"`
+	UpdatedBy  string    `json:"updated_by" avro:"updated_by"`
+	CreatedAt  time.Time `json:"created_at" avro:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at" avro:"updated_at"`
+}
+
+func (c Campaign) ValidateCampaign() error {
+	c.Status = strings.ToUpper(c.Status)
+	c.CreatedBy = strings.ToLower(c.CreatedBy)
+	c.UpdatedBy = strings.ToLower(c.UpdatedBy)
+
+	err := ValidateStatus(c.Status)
+	if err != nil {
+
+		return fmt.Errorf("invalid campaign status %s", c.Status)
+	}
+
+	if c.CreatedBy == "" {
+
+		return fmt.Errorf("invalid campaign createdBy %s", c.CreatedBy)
+	}
+
+	if c.UpdatedBy == "" {
+
+		return fmt.Errorf("invalid campaign updatedBy %s", c.UpdatedBy)
+	}
+
+	return nil
+}

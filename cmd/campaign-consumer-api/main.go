@@ -10,7 +10,6 @@ import (
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/config"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/dao"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/listener/handler"
-	"github.com/VanessaVallarini/campaign-consumer-api/internal/listener/processor"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/client"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/consumer"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/postgres"
@@ -56,15 +55,12 @@ func main() {
 	merchantService := service.NewMerchantService(merchantRepository)
 	campaignService := service.NewCampaignService(campaignRepository)
 
-	// processor
-	campaignProcessor := processor.NewCampaignProcessor(campaignService)
-
 	// handler
 	ownerHandler := handler.MakeOwnerEventHandler(ownerService)
 	slugHandler := handler.MakeSlugEventHandler(slugService)
 	regionHandler := handler.MakeRegionEventHandler(regionService)
 	merchantHandler := handler.MakeMerchantEventHandler(merchantService)
-	campaignHandler := handler.MakeCampaignEventHandler(campaignProcessor)
+	campaignHandler := handler.MakeCampaignEventHandler(campaignService)
 
 	// client
 	ownerSrClient := client.NewSchemaRegistry(cfg.KafkaOwner)
