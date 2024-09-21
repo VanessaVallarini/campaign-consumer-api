@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -88,4 +90,34 @@ type Merchant struct {
 	UpdatedBy string      `json:"updated_by" avro:"updated_by"`
 	CreatedAt time.Time   `json:"created_at" avro:"created_at"`
 	UpdatedAt time.Time   `json:"updated_at" avro:"updated_at"`
+}
+
+func (m Merchant) ValidateMerchant() error {
+	m.Name = strings.ToUpper(m.Name)
+	m.Status = strings.ToUpper(m.Status)
+	m.CreatedBy = strings.ToLower(m.CreatedBy)
+	m.UpdatedBy = strings.ToLower(m.UpdatedBy)
+
+	if m.Name == "" {
+
+		return fmt.Errorf("invalid merchant name %s", m.Name)
+	}
+
+	err := ValidateStatus(m.Status)
+	if err != nil {
+
+		return fmt.Errorf("invalid merchant status %s", m.Status)
+	}
+
+	if m.CreatedBy == "" {
+
+		return fmt.Errorf("invalid merchant createdBy %s", m.CreatedBy)
+	}
+
+	if m.UpdatedBy == "" {
+
+		return fmt.Errorf("invalid merchant updatedBy %s", m.UpdatedBy)
+	}
+
+	return nil
 }

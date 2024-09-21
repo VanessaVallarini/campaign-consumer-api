@@ -22,7 +22,6 @@ func MakeMerchantEventHandler(merchantService MerchantService) func(msg *sarama.
 			return errors.New("Invalid message pointer")
 		}
 
-		// Decode msg.Value into model.Merchant
 		var merchant model.Merchant
 		if err := srClient.Decode(msg.Value, &merchant, subject); err != nil {
 			easyzap.Error(err, "error during decode message consumer kafka on create or update merchant")
@@ -30,7 +29,6 @@ func MakeMerchantEventHandler(merchantService MerchantService) func(msg *sarama.
 			return err
 		}
 
-		easyzap.Infof("got merchant event for %s", merchant.Name)
 		if err := merchantService.Upsert(context.Background(), merchant); err != nil {
 
 			return err

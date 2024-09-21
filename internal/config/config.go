@@ -135,7 +135,7 @@ func GetConfig() Config {
 				RetryMax:          viperCfg.GetInt("kafka.retry-max"),
 				Topic:             viperCfg.GetString("kafka-owner.topic"),
 				Subject:           viperCfg.GetString("kafka-owner.subject"),
-				BalanceStrategy:   sarama.NewBalanceStrategyRoundRobin(), //seria a melhor abordagem?
+				BalanceStrategy:   sarama.NewBalanceStrategyRoundRobin(),
 				SchemaRegistryConfig: SchemaRegistryConfig{
 					Host:     viperCfg.GetString("kafka.schema-registry.host"),
 					User:     viperCfg.GetString("kafka-owner.schema-registry.user"),

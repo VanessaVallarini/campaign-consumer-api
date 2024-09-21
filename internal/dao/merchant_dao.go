@@ -7,15 +7,17 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	easyzap "github.com/lockp111/go-easyzap"
 	"github.com/pkg/errors"
 )
 
-type MerchantRepository struct {
+type MerchantDao struct {
 	pool *pgxpool.Pool
 }
 
-func NewMerchantRepository(pool *pgxpool.Pool) MerchantRepository {
-	return MerchantRepository{
+func NewMerchantDao(pool *pgxpool.Pool) MerchantDao {
+
+	return MerchantDao{
 		pool: pool,
 	}
 }
@@ -34,7 +36,7 @@ const allMerchantFields = `
 `
 
 var upsertMerchantQuery = `
-	INSERT INTO merchant (id, owner_id, region_id, slugs, name, status, created_by, updated_by, created_at, updated_at)
+	INSERT INTO merchant (` + allMerchantFields + `)
 	VALUES (
 		$1,
 		$2,
@@ -60,8 +62,8 @@ var upsertMerchantQuery = `
 		OR merchant.status <> EXCLUDED.status;
 `
 
-func (m MerchantRepository) Upsert(ctx context.Context, merchant model.Merchant) error {
-	_, err := m.pool.Exec(
+func (md MerchantDao) Upsert(ctx context.Context, merchant model.Merchant) error {
+	_, err := md.pool.Exec(
 		ctx,
 		upsertMerchantQuery,
 		merchant.Id,
@@ -76,18 +78,20 @@ func (m MerchantRepository) Upsert(ctx context.Context, merchant model.Merchant)
 		merchant.UpdatedAt,
 	)
 	if err != nil {
-		return errors.Wrap(err, "Failed to create merchant in database")
+		easyzap.Error(err, "failed to create or update merchant in database")
+
+		return errors.Wrap(err, "Failed to create or update merchant in database")
 	}
 
 	return nil
 }
 
-func (m MerchantRepository) Fetch(ctx context.Context, id uuid.UUID) (model.Merchant, error) {
+func (md MerchantDao) Fetch(ctx context.Context, id uuid.UUID) (model.Merchant, error) {
 	var merchant model.Merchant
 
 	query := `SELECT ` + allMerchantFields + ` from merchant WHERE id = $1`
 
-	row := m.pool.QueryRow(ctx, query, id)
+	row := md.pool.QueryRow(ctx, query, id)
 	err := row.Scan(
 		&merchant.Id, &merchant.OwnerId, &merchant.RegionId, &merchant.Slugs,
 		&merchant.Name, &merchant.Status, &merchant.CreatedBy,
@@ -96,8 +100,11 @@ func (m MerchantRepository) Fetch(ctx context.Context, id uuid.UUID) (model.Merc
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return model.Merchant{}, errors.Wrap(err, "Merchant not found")
+
+			return model.Merchant{}, model.ErrNotFound
 		}
+		easyzap.Error(err, "failed to fetch merchant in database")
+
 		return model.Merchant{}, errors.Wrap(err, "Failed to fetch merchant in database")
 	}
 

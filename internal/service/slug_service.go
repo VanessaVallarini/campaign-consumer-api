@@ -5,6 +5,7 @@ import (
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
 	"github.com/google/uuid"
+	easyzap "github.com/lockp111/go-easyzap"
 )
 
 type SlugDao interface {
@@ -24,6 +25,12 @@ func NewSlugService(slugDao SlugDao) SlugService {
 }
 
 func (ss SlugService) Upsert(ctx context.Context, slug model.Slug) error {
+	err := slug.ValidateSlug()
+	if err != nil {
+		easyzap.Error(err, "upsert region fail : %w", err)
+
+		return model.ErrInvalid
+	}
 
 	return ss.slugDao.Upsert(ctx, slug)
 }

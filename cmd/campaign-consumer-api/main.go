@@ -46,7 +46,7 @@ func main() {
 	ownerRepository := dao.NewOwnerDao(pool)
 	slugRepository := dao.NewSlugDao(pool)
 	regionRepository := dao.NewRegionDao(pool)
-	merchantRepository := dao.NewMerchantRepository(pool)
+	merchantRepository := dao.NewMerchantDao(pool)
 	campaignRepository := dao.NewCampaignRepository(pool)
 
 	// service

@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	easyzap "github.com/lockp111/go-easyzap"
 	"github.com/pkg/errors"
 )
 
@@ -34,7 +35,7 @@ const allRegionFields = `
 `
 
 var upsertRegionQuery = `
-	INSERT INTO region (id, name, status, lat, long, cost, created_by, updated_by, created_at, updated_at)
+	INSERT INTO region (` + allRegionFields + `)
 	VALUES (
 		$1,
 		$2,
@@ -80,6 +81,8 @@ func (rd RegionDao) Upsert(ctx context.Context, region model.Region) error {
 		region.UpdatedAt,
 	)
 	if err != nil {
+		easyzap.Error(err, "failed to create or update region in database")
+
 		return errors.Wrap(err, "Failed to create or update region in database")
 	}
 
@@ -100,8 +103,11 @@ func (rd RegionDao) Fetch(ctx context.Context, id uuid.UUID) (model.Region, erro
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return model.Region{}, errors.Wrap(err, "Region not found")
+
+			return model.Region{}, model.ErrNotFound
 		}
+		easyzap.Error(err, "failed to fetch region in database")
+
 		return model.Region{}, errors.Wrap(err, "Failed to fetch region in database")
 	}
 

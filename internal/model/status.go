@@ -1,29 +1,22 @@
 package model
 
-type OwnerStatus string
+type Status string
 
 const (
-	ActiveOwner   OwnerStatus = "ACTIVE"
-	InactiveOwner OwnerStatus = "INACTIVE"
+	Active   Status = "ACTIVE"
+	Inactive Status = "INACTIVE"
 )
 
-type SlugStatus string
+func ValidateStatus(status string) error {
+	validStatuses := map[string]bool{
+		string(Active):   true,
+		string(Inactive): true,
+	}
 
-const (
-	ActiveSlug   SlugStatus = "ACTIVE"
-	InactiveSlug SlugStatus = "INACTIVE"
-)
+	if !validStatuses[status] {
 
-type RegionStatus string
+		return ErrInvalid
+	}
 
-const (
-	ActiveRegion   RegionStatus = "ACTIVE"
-	InactiveRegion RegionStatus = "INACTIVE"
-)
-
-type MerchantStatus string
-
-const (
-	ActiveMerchant   MerchantStatus = "ACTIVE"
-	InactiveMerchant MerchantStatus = "INACTIVE"
-)
+	return nil
+}

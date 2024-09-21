@@ -5,6 +5,7 @@ import (
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
 	"github.com/jackc/pgx/v5/pgxpool"
+	easyzap "github.com/lockp111/go-easyzap"
 	"github.com/pkg/errors"
 )
 
@@ -18,8 +19,18 @@ func NewOwnerDao(pool *pgxpool.Pool) OwnerDao {
 	}
 }
 
+const allOwnerFields = `
+	id, 
+	email, 
+	status, 
+	created_by, 
+	updated_by, 
+	created_at, 
+	updated_at
+`
+
 var upsertOwnerQuery = `
-	INSERT INTO owner (id, email, status, created_by, updated_by, created_at, updated_at)
+	INSERT INTO owner (` + allOwnerFields + `)
 	VALUES (
 		$1,
 		$2,
@@ -53,6 +64,7 @@ func (od OwnerDao) Upsert(ctx context.Context, owner model.Owner) error {
 		owner.UpdatedAt,
 	)
 	if err != nil {
+		easyzap.Error(err, "failed to create or update merchant in database")
 
 		return errors.Wrap(err, "Failed to create or update owner in database")
 	}
