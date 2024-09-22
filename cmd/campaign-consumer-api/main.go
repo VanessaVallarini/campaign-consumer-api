@@ -61,8 +61,8 @@ func main() {
 
 	// service
 	ownerService := service.NewOwnerService(ownerDao)
-	slugService := service.NewSlugService(slugDao, slugHistoryDao)
-	regionService := service.NewRegionService(regionDao, regionHistoryDao)
+	slugService := service.NewSlugService(slugDao, slugHistoryDao, transactionManager)
+	regionService := service.NewRegionService(regionDao, regionHistoryDao, transactionManager)
 	merchantService := service.NewMerchantService(merchantDao)
 	spentService := service.NewSpentService(spentDao)
 	bucketService := service.NewBucketService(timeLocation)

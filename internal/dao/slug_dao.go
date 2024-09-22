@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -69,8 +70,8 @@ var createSlugQuery = `
 		);
 `
 
-func (sd SlugDao) Create(ctx context.Context, slug model.Slug) error {
-	_, err := sd.pool.Exec(
+func (sd SlugDao) Create(ctx context.Context, tx transaction.Transaction, slug model.Slug) error {
+	err := tx.Exec(
 		ctx,
 		createSlugQuery,
 		slug.Id,
@@ -102,8 +103,8 @@ var updateSlugQuery = `
 		id = $5;
 `
 
-func (sd SlugDao) Update(ctx context.Context, slug model.Slug) error {
-	_, err := sd.pool.Exec(
+func (sd SlugDao) Update(ctx context.Context, tx transaction.Transaction, slug model.Slug) error {
+	err := tx.Exec(
 		ctx,
 		updateSlugQuery,
 		slug.Status,

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"
 )
@@ -39,8 +40,8 @@ var createSlugHistoryQuery = `
 		);
 `
 
-func (sh SlugHistoryDao) Create(ctx context.Context, history model.SlugHistory) error {
-	_, err := sh.pool.Exec(
+func (sh SlugHistoryDao) Create(ctx context.Context, tx transaction.Transaction, history model.SlugHistory) error {
+	err := tx.Exec(
 		ctx,
 		createSlugHistoryQuery,
 		history.Id,

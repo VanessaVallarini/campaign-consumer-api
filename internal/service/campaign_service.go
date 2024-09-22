@@ -10,10 +10,6 @@ import (
 	easyzap "github.com/lockp111/go-easyzap"
 )
 
-type TransactionManager interface {
-	Execute(context.Context, func(context.Context, transaction.Transaction) error) error
-}
-
 type CampaignDao interface {
 	Fetch(context.Context, uuid.UUID) (model.Campaign, error)
 	Create(context.Context, transaction.Transaction, model.Campaign) error
@@ -156,6 +152,11 @@ func (cs CampaignService) buildHistory(campaign model.Campaign, campaignDb *mode
 		}
 		if campaignDb.Budget != campaign.Budget {
 			history.Description = fmt.Sprintf(model.CampaignUpdateBudget, campaignDb.Budget, campaign.Budget)
+		}
+		if campaignDb.Budget != campaign.Budget && campaignDb.Status != campaign.Status {
+			history.Description = fmt.Sprintf("%v E %v",
+				fmt.Sprintf(model.CampaignUpdateBudget, campaignDb.Budget, campaign.Budget),
+				fmt.Sprintf(model.CampaignUpdateStatus, campaignDb.Status, campaign.Status))
 		}
 	}
 

@@ -5,29 +5,32 @@ import (
 	"fmt"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 	"github.com/google/uuid"
 	easyzap "github.com/lockp111/go-easyzap"
 )
 
 type RegionDao interface {
 	Fetch(context.Context, uuid.UUID) (model.Region, error)
-	Create(context.Context, model.Region) error
-	Update(context.Context, model.Region) error
+	Create(context.Context, transaction.Transaction, model.Region) error
+	Update(context.Context, transaction.Transaction, model.Region) error
 }
 
 type RegionHistoryDao interface {
-	Create(context.Context, model.RegionHistory) error
+	Create(context.Context, transaction.Transaction, model.RegionHistory) error
 }
 
 type RegionService struct {
 	regionDao        RegionDao
 	regionHistoryDao RegionHistoryDao
+	tm               TransactionManager
 }
 
-func NewRegionService(regionDao RegionDao, regionHistoryDao RegionHistoryDao) RegionService {
+func NewRegionService(regionDao RegionDao, regionHistoryDao RegionHistoryDao, tm TransactionManager) RegionService {
 	return RegionService{
 		regionDao:        regionDao,
 		regionHistoryDao: regionHistoryDao,
+		tm:               tm,
 	}
 }
 
@@ -47,14 +50,14 @@ func (rs RegionService) Upsert(ctx context.Context, region model.Region) error {
 	}
 
 	if err != nil && err == model.ErrNotFound {
-		err := rs.regionDao.Create(ctx, region)
+		err := rs.createAndRegistryHistory(ctx, region, &regionDb)
 		if err != nil {
 			easyzap.Errorf("fail to create region %v: %v", region, err)
 
 			return err
 		}
 	} else {
-		err = rs.regionDao.Update(ctx, region)
+		err := rs.updateAndRegistryHistory(ctx, region, &regionDb)
 		if err != nil {
 			easyzap.Errorf("fail to update regionDb %v to region %v: %v", regionDb, region, err)
 
@@ -62,13 +65,21 @@ func (rs RegionService) Upsert(ctx context.Context, region model.Region) error {
 		}
 	}
 
-	err = rs.registryHistory(ctx, region, &regionDb)
-	if err != nil {
-		easyzap.Errorf("fail to registry history regionDb %v to region %v: %v", regionDb, region, err)
-		region.Status = string(model.Cancelled)
-		errRollback := rs.regionDao.Update(ctx, regionDb)
-		if errRollback != nil {
-			easyzap.Errorf("[INCONSISTENT] fail to rollback region %v to regionDb %v: %v", region, regionDb, err)
+	return nil
+}
+
+func (rs RegionService) createAndRegistryHistory(ctx context.Context, region model.Region, regionDb *model.Region) error {
+	funcWithTransaction := func(ctx context.Context, tx transaction.Transaction) error {
+		err := rs.regionDao.Create(ctx, tx, region)
+		if err != nil {
+
+			return err
+		}
+
+		history := rs.buildHistory(region, regionDb)
+
+		err = rs.regionHistoryDao.Create(ctx, tx, history)
+		if err != nil {
 
 			return err
 		}
@@ -76,57 +87,58 @@ func (rs RegionService) Upsert(ctx context.Context, region model.Region) error {
 		return err
 	}
 
-	return nil
+	return rs.tm.Execute(ctx, funcWithTransaction)
 }
 
-func (rs RegionService) registryHistory(ctx context.Context, region model.Region, regionDb *model.Region) error {
-	if regionDb.Id == uuid.Nil {
-		err := rs.regionHistoryDao.Create(ctx, model.RegionHistory{
-			Id:          uuid.New(),
-			RegionId:    region.Id,
-			Status:      region.Status,
-			Description: model.RegionCreatedAndActive,
-			CreatedBy:   region.UpdatedBy,
-			CreatedAt:   region.UpdatedAt,
-		})
+func (rs RegionService) updateAndRegistryHistory(ctx context.Context, region model.Region, regionDb *model.Region) error {
+	funcWithTransaction := func(ctx context.Context, tx transaction.Transaction) error {
+		err := rs.regionDao.Update(ctx, tx, region)
 		if err != nil {
-			easyzap.Errorf("fail to registry history region create %v: %v", region, region)
 
 			return err
 		}
+
+		history := rs.buildHistory(region, regionDb)
+
+		err = rs.regionHistoryDao.Create(ctx, tx, history)
+		if err != nil {
+
+			return err
+		}
+
+		return err
+	}
+
+	return rs.tm.Execute(ctx, funcWithTransaction)
+}
+
+func (rs RegionService) buildHistory(region model.Region, regionDb *model.Region) model.RegionHistory {
+	history := model.RegionHistory{
+		Id:          uuid.New(),
+		RegionId:    region.Id,
+		Status:      region.Status,
+		Description: model.RegionCreatedAndActive,
+		CreatedBy:   region.UpdatedBy,
+		CreatedAt:   region.UpdatedAt,
+	}
+
+	if regionDb.Id == uuid.Nil {
+		history.Description = model.RegionCreatedAndActive
 	} else {
 		if regionDb.Status != region.Status {
-			err := rs.regionHistoryDao.Create(ctx, model.RegionHistory{
-				Id:          uuid.New(),
-				RegionId:    region.Id,
-				Status:      region.Status,
-				Description: fmt.Sprintf(model.RegionUpdateStatus, regionDb.Status, region.Status),
-				CreatedBy:   region.UpdatedBy,
-				CreatedAt:   region.UpdatedAt,
-			})
-			if err != nil {
-				easyzap.Errorf("fail to registry history region status from %s to %s for regionId %s: %v", regionDb.Status, region.Status, region.Id.String(), err)
-
-				return err
-			}
+			history.Description = fmt.Sprintf(model.RegionUpdateStatus, regionDb.Status, region.Status)
 		}
 
 		if regionDb.Cost != region.Cost {
-			err := rs.regionHistoryDao.Create(ctx, model.RegionHistory{
-				Id:          uuid.New(),
-				RegionId:    region.Id,
-				Status:      region.Status,
-				Description: fmt.Sprintf(model.RegionUpdateCost, regionDb.Cost, region.Cost),
-				CreatedBy:   region.UpdatedBy,
-				CreatedAt:   region.UpdatedAt,
-			})
-			if err != nil {
-				easyzap.Errorf("fail to registry history region cost from %.2f to %.2f for regionId %s: %v", regionDb.Cost, region.Cost, region.Id.String(), err)
+			history.Description = fmt.Sprintf(model.RegionUpdateCost, regionDb.Cost, region.Cost)
+		}
 
-				return err
-			}
+		if regionDb.Cost != region.Cost && regionDb.Status != region.Status {
+			history.Description = fmt.Sprintf("%v E %v",
+				fmt.Sprintf(model.RegionUpdateCost, regionDb.Cost, region.Cost),
+				fmt.Sprintf(model.RegionUpdateStatus, regionDb.Status, region.Status))
 		}
 	}
 
-	return nil
+	return history
 }

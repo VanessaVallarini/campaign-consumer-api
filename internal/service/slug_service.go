@@ -5,30 +5,32 @@ import (
 	"fmt"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 	"github.com/google/uuid"
 	easyzap "github.com/lockp111/go-easyzap"
 )
 
 type SlugDao interface {
-	Fetch(ctx context.Context, id uuid.UUID) (model.Slug, error)
-	Create(ctx context.Context, slug model.Slug) error
-	Update(ctx context.Context, slug model.Slug) error
+	Fetch(context.Context, uuid.UUID) (model.Slug, error)
+	Create(context.Context, transaction.Transaction, model.Slug) error
+	Update(context.Context, transaction.Transaction, model.Slug) error
 }
 
 type SlugHistoryDao interface {
-	Create(context.Context, model.SlugHistory) error
+	Create(context.Context, transaction.Transaction, model.SlugHistory) error
 }
 
 type SlugService struct {
 	slugDao        SlugDao
 	slugHistoryDao SlugHistoryDao
+	tm             TransactionManager
 }
 
-func NewSlugService(slugDao SlugDao, slugHistoryDao SlugHistoryDao) SlugService {
-
+func NewSlugService(slugDao SlugDao, slugHistoryDao SlugHistoryDao, tm TransactionManager) SlugService {
 	return SlugService{
 		slugDao:        slugDao,
 		slugHistoryDao: slugHistoryDao,
+		tm:             tm,
 	}
 }
 
@@ -48,28 +50,36 @@ func (ss SlugService) Upsert(ctx context.Context, slug model.Slug) error {
 	}
 
 	if err != nil && err == model.ErrNotFound {
-		err := ss.slugDao.Create(ctx, slug)
+		err := ss.createAndRegistryHistory(ctx, slug, &slugDb)
 		if err != nil {
 			easyzap.Errorf("fail to create slug %v: %v", slug, err)
 
 			return err
 		}
 	} else {
-		err = ss.slugDao.Update(ctx, slug)
+		err := ss.updateAndRegistryHistory(ctx, slug, &slugDb)
 		if err != nil {
-			easyzap.Errorf("fail to update slugDb %v to slug %v: %v", slugDb, slug, err)
+			easyzap.Errorf("fail to registry history slugDb %v to slug %v: %v", slugDb, slug, err)
 
 			return err
 		}
 	}
 
-	err = ss.registryHistory(ctx, slug, &slugDb)
-	if err != nil {
-		easyzap.Errorf("fail to registry history slugDb %v to slug %v: %v", slugDb, slug, err)
-		slug.Status = string(model.Cancelled)
-		errRollback := ss.slugDao.Update(ctx, slugDb)
-		if errRollback != nil {
-			easyzap.Errorf("[INCONSISTENT] fail to rollback slug %v to slugDb %v: %v", slug, slugDb, err)
+	return nil
+}
+
+func (ss SlugService) createAndRegistryHistory(ctx context.Context, slug model.Slug, slugDb *model.Slug) error {
+	funcWithTransaction := func(ctx context.Context, tx transaction.Transaction) error {
+		err := ss.slugDao.Create(ctx, tx, slug)
+		if err != nil {
+
+			return err
+		}
+
+		history := ss.buildHistory(slug, slugDb)
+
+		err = ss.slugHistoryDao.Create(ctx, tx, history)
+		if err != nil {
 
 			return err
 		}
@@ -77,57 +87,56 @@ func (ss SlugService) Upsert(ctx context.Context, slug model.Slug) error {
 		return err
 	}
 
-	return nil
+	return ss.tm.Execute(ctx, funcWithTransaction)
 }
 
-func (ss SlugService) registryHistory(ctx context.Context, slug model.Slug, slugDb *model.Slug) error {
-	if slugDb.Id == uuid.Nil {
-		err := ss.slugHistoryDao.Create(ctx, model.SlugHistory{
-			Id:          uuid.New(),
-			SlugId:      slug.Id,
-			Status:      slug.Status,
-			Description: model.SlugCreatedAndActive,
-			CreatedBy:   slug.UpdatedBy,
-			CreatedAt:   slug.UpdatedAt,
-		})
+func (ss SlugService) updateAndRegistryHistory(ctx context.Context, slug model.Slug, slugDb *model.Slug) error {
+	funcWithTransaction := func(ctx context.Context, tx transaction.Transaction) error {
+		err := ss.slugDao.Update(ctx, tx, slug)
 		if err != nil {
-			easyzap.Errorf("fail to registry history slug create %v: %v", slug, err)
 
 			return err
 		}
-	} else {
-		if slugDb.Status != slug.Status {
-			err := ss.slugHistoryDao.Create(ctx, model.SlugHistory{
-				Id:          uuid.New(),
-				SlugId:      slug.Id,
-				Status:      slug.Status,
-				Description: fmt.Sprintf(model.SlugUpdateStatus, slugDb.Status, slug.Status),
-				CreatedBy:   slug.UpdatedBy,
-				CreatedAt:   slug.UpdatedAt,
-			})
-			if err != nil {
-				easyzap.Errorf("fail to registry history slug status from %s to %s for slugId %s: %v", slugDb.Status, slug.Status, slug.Id.String(), err)
 
-				return err
-			}
+		history := ss.buildHistory(slug, slugDb)
+
+		err = ss.slugHistoryDao.Create(ctx, tx, history)
+		if err != nil {
+
+			return err
 		}
 
-		if slugDb.Cost != slug.Cost {
-			err := ss.slugHistoryDao.Create(ctx, model.SlugHistory{
-				Id:          uuid.New(),
-				SlugId:      slug.Id,
-				Status:      slug.Status,
-				Description: fmt.Sprintf(model.SlugUpdateCost, slugDb.Cost, slug.Cost),
-				CreatedBy:   slug.UpdatedBy,
-				CreatedAt:   slug.UpdatedAt,
-			})
-			if err != nil {
-				easyzap.Errorf("fail to registry history slug cost from %.2f to %.2f for slugId %s: %v", slugDb.Cost, slug.Cost, slug.Id.String(), err)
+		return err
+	}
 
-				return err
-			}
+	return ss.tm.Execute(ctx, funcWithTransaction)
+}
+
+func (ss SlugService) buildHistory(slug model.Slug, slugDb *model.Slug) model.SlugHistory {
+	history := model.SlugHistory{
+		Id:          uuid.New(),
+		SlugId:      slug.Id,
+		Status:      slug.Status,
+		Description: model.SlugCreatedAndActive,
+		CreatedBy:   slug.UpdatedBy,
+		CreatedAt:   slug.UpdatedAt,
+	}
+
+	if slugDb.Id == uuid.Nil {
+		history.Description = model.SlugCreatedAndActive
+	} else {
+		if slugDb.Status != slug.Status {
+			history.Description = fmt.Sprintf(model.SlugUpdateStatus, slugDb.Status, slug.Status)
+		}
+		if slugDb.Cost != slug.Cost {
+			history.Description = fmt.Sprintf(model.SlugUpdateCost, slugDb.Cost, slug.Cost)
+		}
+		if slugDb.Cost != slug.Cost && slugDb.Status != slug.Status {
+			history.Description = fmt.Sprintf("%v E %v",
+				fmt.Sprintf(model.SlugUpdateCost, slugDb.Cost, slug.Cost),
+				fmt.Sprintf(model.SlugUpdateStatus, slugDb.Status, slug.Status))
 		}
 	}
 
-	return nil
+	return history
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -73,8 +74,8 @@ var createRegionQuery = `
 	);
 `
 
-func (rd RegionDao) Create(ctx context.Context, region model.Region) error {
-	_, err := rd.pool.Exec(
+func (rd RegionDao) Create(ctx context.Context, tx transaction.Transaction, region model.Region) error {
+	err := tx.Exec(
 		ctx,
 		createRegionQuery,
 		region.Id,
@@ -108,8 +109,8 @@ var updateRegionQuery = `
 		id = $5;
 `
 
-func (rd RegionDao) Update(ctx context.Context, region model.Region) error {
-	_, err := rd.pool.Exec(
+func (rd RegionDao) Update(ctx context.Context, tx transaction.Transaction, region model.Region) error {
+	err := tx.Exec(
 		ctx,
 		updateRegionQuery,
 		region.Status,
