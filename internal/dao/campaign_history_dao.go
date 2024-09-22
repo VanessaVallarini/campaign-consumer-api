@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"
 )
@@ -39,8 +40,8 @@ var createCampaignHistoryQuery = `
 	);
 `
 
-func (ch CampaignHistoryDao) Create(ctx context.Context, history model.CampaignHistory) error {
-	_, err := ch.pool.Exec(
+func (ch CampaignHistoryDao) Create(ctx context.Context, tx transaction.Transaction, history model.CampaignHistory) error {
+	err := tx.Exec(
 		ctx,
 		createCampaignHistoryQuery,
 		history.Id,

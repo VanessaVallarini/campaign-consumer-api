@@ -5,18 +5,23 @@ import (
 	"fmt"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 	"github.com/google/uuid"
 	easyzap "github.com/lockp111/go-easyzap"
 )
 
+type TransactionManager interface {
+	Execute(context.Context, func(context.Context, transaction.Transaction) error) error
+}
+
 type CampaignDao interface {
 	Fetch(context.Context, uuid.UUID) (model.Campaign, error)
-	Create(context.Context, model.Campaign) error
-	Update(context.Context, model.Campaign) error
+	Create(context.Context, transaction.Transaction, model.Campaign) error
+	Update(context.Context, transaction.Transaction, model.Campaign) error
 }
 
 type CampaignHistoryDao interface {
-	Create(context.Context, model.CampaignHistory) error
+	Create(context.Context, transaction.Transaction, model.CampaignHistory) error
 }
 
 type SpentFetcher interface {
@@ -32,14 +37,16 @@ type CampaignService struct {
 	campaignHistoryDao CampaignHistoryDao
 	spentFetcher       SpentFetcher
 	bucketFetcher      BucketFetcher
+	tm                 TransactionManager
 }
 
-func NewCampaignService(campaignDao CampaignDao, campaignHistoryDao CampaignHistoryDao, spentFetcher SpentFetcher, bucketFetcher BucketFetcher) CampaignService {
+func NewCampaignService(campaignDao CampaignDao, campaignHistoryDao CampaignHistoryDao, spentFetcher SpentFetcher, bucketFetcher BucketFetcher, tm TransactionManager) CampaignService {
 	return CampaignService{
 		campaignDao:        campaignDao,
 		campaignHistoryDao: campaignHistoryDao,
 		spentFetcher:       spentFetcher,
 		bucketFetcher:      bucketFetcher,
+		tm:                 tm,
 	}
 }
 
@@ -59,7 +66,7 @@ func (cs CampaignService) Upsert(ctx context.Context, campaign model.Campaign) e
 	}
 
 	if err != nil && err == model.ErrNotFound {
-		err := cs.campaignDao.Create(ctx, campaign)
+		err := cs.createAndRegistryHistory(ctx, campaign, &campaignDb)
 		if err != nil {
 			easyzap.Errorf("fail to create campaign %v: %v", campaign, err)
 
@@ -76,21 +83,29 @@ func (cs CampaignService) Upsert(ctx context.Context, campaign model.Campaign) e
 			campaign.Status = string(model.Active)
 		}
 
-		err = cs.campaignDao.Update(ctx, campaign)
+		err := cs.updateAndRegistryHistory(ctx, campaign, &campaignDb)
 		if err != nil {
-			easyzap.Errorf("fail to update campaignDb %v to campaign %v: %v", campaignDb, campaign, err)
+			easyzap.Errorf("fail to update campaign from %s to %s for campaignId %s: %v", campaignDb.Status, campaign.Status, campaign.Id.String(), err)
 
 			return err
 		}
 	}
 
-	err = cs.registryHistory(ctx, campaign, &campaignDb)
-	if err != nil {
-		easyzap.Errorf("fail to registry history campaignDb %v to campaign %v: %v", campaignDb, campaign, err)
-		campaign.Status = string(model.Cancelled)
-		errRollback := cs.campaignDao.Update(ctx, campaignDb)
-		if errRollback != nil {
-			easyzap.Errorf("[INCONSISTENT] fail to rollback campaign %v to campaignDb %v: %v", campaign, campaignDb, err)
+	return nil
+}
+
+func (cs CampaignService) createAndRegistryHistory(ctx context.Context, campaign model.Campaign, campaignDb *model.Campaign) error {
+	funcWithTransaction := func(ctx context.Context, tx transaction.Transaction) error {
+		err := cs.campaignDao.Create(ctx, tx, campaign)
+		if err != nil {
+
+			return err
+		}
+
+		history := cs.buildHistory(campaign, campaignDb)
+
+		err = cs.campaignHistoryDao.Create(ctx, tx, history)
+		if err != nil {
 
 			return err
 		}
@@ -98,13 +113,56 @@ func (cs CampaignService) Upsert(ctx context.Context, campaign model.Campaign) e
 		return err
 	}
 
-	return nil
+	return cs.tm.Execute(ctx, funcWithTransaction)
+}
+
+func (cs CampaignService) updateAndRegistryHistory(ctx context.Context, campaign model.Campaign, campaignDb *model.Campaign) error {
+	funcWithTransaction := func(ctx context.Context, tx transaction.Transaction) error {
+		err := cs.campaignDao.Update(ctx, tx, campaign)
+		if err != nil {
+
+			return err
+		}
+
+		history := cs.buildHistory(campaign, campaignDb)
+
+		err = cs.campaignHistoryDao.Create(ctx, tx, history)
+		if err != nil {
+
+			return err
+		}
+
+		return err
+	}
+
+	return cs.tm.Execute(ctx, funcWithTransaction)
+}
+
+func (cs CampaignService) buildHistory(campaign model.Campaign, campaignDb *model.Campaign) model.CampaignHistory {
+	history := model.CampaignHistory{
+		Id:          uuid.New(),
+		CampaignId:  campaign.Id,
+		Status:      campaign.Status,
+		Description: model.CampaignCreatedAndActive,
+		CreatedBy:   campaign.UpdatedBy,
+		CreatedAt:   campaign.UpdatedAt,
+	}
+
+	if campaignDb.Id == uuid.Nil {
+		history.Description = model.CampaignCreatedAndActive
+	} else {
+		if campaignDb.Status != campaign.Status {
+			history.Description = fmt.Sprintf(model.CampaignUpdateStatus, campaignDb.Status, campaign.Status)
+		}
+		if campaignDb.Budget != campaign.Budget {
+			history.Description = fmt.Sprintf(model.CampaignUpdateBudget, campaignDb.Budget, campaign.Budget)
+		}
+	}
+
+	return history
 }
 
 func (cs CampaignService) shouldUpdateAndActivateCampaign(ctx context.Context, campaign model.Campaign, campaignDb model.Campaign) (bool, bool) {
-	//shouldUpdate
-	//shouldActivateCampaign
-
 	spent, err := cs.spentFetcher.FetchByCampaignIdAndBucket(ctx, campaign.Id, cs.bucketFetcher.CurrentBucket().Key)
 	if err != nil {
 		if err != model.ErrNotFound {
@@ -117,8 +175,6 @@ func (cs CampaignService) shouldUpdateAndActivateCampaign(ctx context.Context, c
 		return false, false
 	}
 
-	//não pode atualizar o status de uma campanha de pendente para ativo se
-	//o budget alterar pra baixo ou não sofrer alteração e for menor/igual ao spent
 	if campaignDb.Status == string(model.Suspended) &&
 		campaign.Status == string(model.Active) &&
 		campaign.Budget <= campaignDb.Budget &&
@@ -127,7 +183,6 @@ func (cs CampaignService) shouldUpdateAndActivateCampaign(ctx context.Context, c
 
 	}
 
-	//uma campanha deve ser ativa se estiver suspensa e o budget for maior que o spent
 	if campaignDb.Status == string(model.Suspended) &&
 		campaign.Budget > campaignDb.Budget &&
 		campaign.Budget > spent.TotalSpent {
@@ -136,56 +191,4 @@ func (cs CampaignService) shouldUpdateAndActivateCampaign(ctx context.Context, c
 	}
 
 	return true, false
-}
-
-func (cs CampaignService) registryHistory(ctx context.Context, campaign model.Campaign, campaignDb *model.Campaign) error {
-	if campaignDb.Id == uuid.Nil {
-		err := cs.campaignHistoryDao.Create(ctx, model.CampaignHistory{
-			Id:          uuid.New(),
-			CampaignId:  campaign.Id,
-			Status:      campaign.Status,
-			Description: model.CampaignCreatedAndActive,
-			CreatedBy:   campaign.UpdatedBy,
-			CreatedAt:   campaign.UpdatedAt,
-		})
-		if err != nil {
-			easyzap.Errorf("fail to registry history campaign create %v: %v", campaign, err)
-
-			return err
-		}
-	} else {
-		if campaignDb.Status != campaign.Status {
-			err := cs.campaignHistoryDao.Create(ctx, model.CampaignHistory{
-				Id:          uuid.New(),
-				CampaignId:  campaign.Id,
-				Status:      campaign.Status,
-				Description: fmt.Sprintf(model.CampaignUpdateStatus, campaignDb.Status, campaign.Status),
-				CreatedBy:   campaign.UpdatedBy,
-				CreatedAt:   campaign.UpdatedAt,
-			})
-			if err != nil {
-				easyzap.Errorf("fail to registry history campaign status from %s to %s for campaignId %s: %v", campaignDb.Status, campaign.Status, campaign.Id.String(), err)
-
-				return err
-			}
-		}
-
-		if campaignDb.Budget != campaign.Budget {
-			err := cs.campaignHistoryDao.Create(ctx, model.CampaignHistory{
-				Id:          uuid.New(),
-				CampaignId:  campaign.Id,
-				Status:      campaign.Status,
-				Description: fmt.Sprintf(model.CampaignUpdateBudget, campaignDb.Budget, campaign.Budget),
-				CreatedBy:   campaign.UpdatedBy,
-				CreatedAt:   campaign.UpdatedAt,
-			})
-			if err != nil {
-				easyzap.Errorf("fail to registry history campaign budget from %.2f to %.2f for campaignId %s: %v", campaignDb.Budget, campaign.Budget, campaign.Id.String(), err)
-
-				return err
-			}
-		}
-	}
-
-	return nil
 }

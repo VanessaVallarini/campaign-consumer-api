@@ -14,6 +14,7 @@ import (
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/client"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/consumer"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/postgres"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/service"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -56,6 +57,7 @@ func main() {
 	slugHistoryDao := dao.NewSlugHistoryDao(pool)
 	regionHistoryDao := dao.NewRegionHistoryDao(pool)
 	spentDao := dao.NewSpentDao(pool)
+	transactionManager := transaction.NewTransactionManager(pool)
 
 	// service
 	ownerService := service.NewOwnerService(ownerDao)
@@ -64,7 +66,7 @@ func main() {
 	merchantService := service.NewMerchantService(merchantDao)
 	spentService := service.NewSpentService(spentDao)
 	bucketService := service.NewBucketService(timeLocation)
-	campaignService := service.NewCampaignService(campaignDao, campaignHistoryDao, spentService, bucketService)
+	campaignService := service.NewCampaignService(campaignDao, campaignHistoryDao, spentService, bucketService, transactionManager)
 
 	// handler
 	ownerHandler := handler.MakeOwnerEventHandler(ownerService)

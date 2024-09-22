@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -69,8 +70,8 @@ var createCampaignQuery = `
 	);
 `
 
-func (c CampaignDao) Create(ctx context.Context, campaign model.Campaign) error {
-	_, err := c.pool.Exec(
+func (c CampaignDao) Create(ctx context.Context, tx transaction.Transaction, campaign model.Campaign) error {
+	err := tx.Exec(
 		ctx,
 		createCampaignQuery,
 		campaign.Id,
@@ -102,8 +103,8 @@ var udateCampaignQuery = `
 		id = $5;
 `
 
-func (c CampaignDao) Update(ctx context.Context, campaign model.Campaign) error {
-	_, err := c.pool.Exec(
+func (c CampaignDao) Update(ctx context.Context, tx transaction.Transaction, campaign model.Campaign) error {
+	err := tx.Exec(
 		ctx,
 		udateCampaignQuery,
 		campaign.Status,
