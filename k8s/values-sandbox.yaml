@@ -55,3 +55,4 @@ appConfigFile:
       kafka-click-impression:
         topic: campaign.campaign-click-impression
         subject: campaign.campaign_click_impression_value
+      time-location: "America/Sao_Paulo"

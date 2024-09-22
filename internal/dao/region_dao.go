@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	easyzap "github.com/lockp111/go-easyzap"
 	"github.com/pkg/errors"
 )
 
@@ -34,61 +33,6 @@ const allRegionFields = `
 	updated_at
 `
 
-var upsertRegionQuery = `
-	INSERT INTO region (` + allRegionFields + `)
-	VALUES (
-		$1,
-		$2,
-		$3,
-		$4,
-		$5,
-		$6,
-		$7,
-		$8,
-		$9,
-		$10
-	)
-	ON CONFLICT (id) DO UPDATE
-	SET
-		name = EXCLUDED.name,
-		status = EXCLUDED.status,
-		lat = EXCLUDED.lat,
-		long = EXCLUDED.long,
-		cost = EXCLUDED.cost,
-		updated_by = EXCLUDED.updated_by,
-		updated_at = EXCLUDED.updated_at
-	WHERE
-		region.name <> EXCLUDED.name
-		OR region.status <> EXCLUDED.status
-		OR region.lat <> EXCLUDED.lat
-		OR region.long <> EXCLUDED.long
-		OR region.cost <> EXCLUDED.cost;
-`
-
-func (rd RegionDao) Upsert(ctx context.Context, region model.Region) error {
-	_, err := rd.pool.Exec(
-		ctx,
-		upsertRegionQuery,
-		region.Id,
-		region.Name,
-		region.Status,
-		region.Lat,
-		region.Long,
-		region.Cost,
-		region.CreatedBy,
-		region.UpdatedBy,
-		region.CreatedAt,
-		region.UpdatedAt,
-	)
-	if err != nil {
-		easyzap.Error(err, "failed to create or update region in database")
-
-		return errors.Wrap(err, "Failed to create or update region in database")
-	}
-
-	return nil
-}
-
 func (rd RegionDao) Fetch(ctx context.Context, id uuid.UUID) (model.Region, error) {
 	var region model.Region
 
@@ -106,10 +50,78 @@ func (rd RegionDao) Fetch(ctx context.Context, id uuid.UUID) (model.Region, erro
 
 			return model.Region{}, model.ErrNotFound
 		}
-		easyzap.Error(err, "failed to fetch region in database")
 
 		return model.Region{}, errors.Wrap(err, "Failed to fetch region in database")
 	}
 
 	return region, nil
+}
+
+var createRegionQuery = `
+	INSERT INTO region (` + allRegionFields + `)
+	VALUES (
+		$1,
+		$2,
+		$3,
+		$4,
+		$5,
+		$6,
+		$7,
+		$8,
+		$9,
+		$10
+	);
+`
+
+func (rd RegionDao) Create(ctx context.Context, region model.Region) error {
+	_, err := rd.pool.Exec(
+		ctx,
+		createRegionQuery,
+		region.Id,
+		region.Name,
+		region.Status,
+		region.Lat,
+		region.Long,
+		region.Cost,
+		region.CreatedBy,
+		region.UpdatedBy,
+		region.CreatedAt,
+		region.UpdatedAt,
+	)
+	if err != nil {
+
+		return errors.Wrap(err, "Failed to create region in database")
+	}
+
+	return nil
+}
+
+var updateRegionQuery = `
+	UPDATE
+		region
+	SET
+		status = $1,
+		cost = $2,
+		updated_by = $3,
+		updated_at = $4
+	WHERE
+		id = $5;
+`
+
+func (rd RegionDao) Update(ctx context.Context, region model.Region) error {
+	_, err := rd.pool.Exec(
+		ctx,
+		updateRegionQuery,
+		region.Status,
+		region.Cost,
+		region.UpdatedBy,
+		region.UpdatedAt,
+		region.Id,
+	)
+	if err != nil {
+
+		return errors.Wrap(err, "Failed to update region in database")
+	}
+
+	return nil
 }

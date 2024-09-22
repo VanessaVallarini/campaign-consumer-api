@@ -3,8 +3,10 @@ package model
 type Status string
 
 const (
-	Active   Status = "ACTIVE"
-	Inactive Status = "INACTIVE"
+	Active    Status = "ACTIVE"
+	Inactive  Status = "INACTIVE"
+	Cancelled Status = "CANCELLED"
+	Suspended Status = "SUSPENDED"
 )
 
 func ValidateStatus(status string) error {

@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	easyzap "github.com/lockp111/go-easyzap"
 	"github.com/pkg/errors"
 )
 
@@ -33,53 +32,6 @@ const allSlugFields = `
 	updated_at
 `
 
-var upsertSlugQuery = `
-	INSERT INTO slug (` + allSlugFields + `)
-		VALUES (
-			$1,
-			$2,
-			$3,
-			$4,
-			$5,
-			$6,
-			$7,
-			$8
-		)
-	ON CONFLICT (id) DO UPDATE
-		SET
-			name = EXCLUDED.name,
-			status = EXCLUDED.status,
-			cost = EXCLUDED.cost,
-			updated_by = EXCLUDED.updated_by,
-			updated_at = EXCLUDED.updated_at
-		WHERE
-			slug.name <> EXCLUDED.name
-			OR slug.status <> EXCLUDED.status
-			OR slug.cost <> EXCLUDED.cost;
-`
-
-func (sd SlugDao) Upsert(ctx context.Context, slug model.Slug) error {
-	_, err := sd.pool.Exec(
-		ctx,
-		upsertSlugQuery,
-		slug.Id,
-		slug.Name,
-		slug.Status,
-		slug.Cost,
-		slug.CreatedBy,
-		slug.UpdatedBy,
-		slug.CreatedAt,
-		slug.UpdatedAt,
-	)
-	if err != nil {
-		easyzap.Error(err, "failed to create or update slug in database")
-
-		return errors.Wrap(err, "Failed to create or update slug in database")
-	}
-
-	return nil
-}
-
 func (sd SlugDao) Fetch(ctx context.Context, id uuid.UUID) (model.Slug, error) {
 	var slug model.Slug
 
@@ -96,10 +48,74 @@ func (sd SlugDao) Fetch(ctx context.Context, id uuid.UUID) (model.Slug, error) {
 
 			return model.Slug{}, model.ErrNotFound
 		}
-		easyzap.Error(err, "failed to fetch slug in database")
 
 		return model.Slug{}, errors.Wrap(err, "Failed to fetch slug in database")
 	}
 
 	return slug, nil
+}
+
+var createSlugQuery = `
+	INSERT INTO slug (` + allSlugFields + `)
+		VALUES (
+			$1,
+			$2,
+			$3,
+			$4,
+			$5,
+			$6,
+			$7,
+			$8
+		);
+`
+
+func (sd SlugDao) Create(ctx context.Context, slug model.Slug) error {
+	_, err := sd.pool.Exec(
+		ctx,
+		createSlugQuery,
+		slug.Id,
+		slug.Name,
+		slug.Status,
+		slug.Cost,
+		slug.CreatedBy,
+		slug.UpdatedBy,
+		slug.CreatedAt,
+		slug.UpdatedAt,
+	)
+	if err != nil {
+
+		return errors.Wrap(err, "Failed to create slug in database")
+	}
+
+	return nil
+}
+
+var updateSlugQuery = `
+	UPDATE
+		slug
+	SET 
+		status = $1,
+		cost = $2,
+		updated_by = $3,
+		updated_at = $4
+	WHERE
+		id = $5;
+`
+
+func (sd SlugDao) Update(ctx context.Context, slug model.Slug) error {
+	_, err := sd.pool.Exec(
+		ctx,
+		updateSlugQuery,
+		slug.Status,
+		slug.Cost,
+		slug.UpdatedBy,
+		slug.UpdatedAt,
+		slug.Id,
+	)
+	if err != nil {
+
+		return errors.Wrap(err, "Failed to update slug in database")
+	}
+
+	return nil
 }

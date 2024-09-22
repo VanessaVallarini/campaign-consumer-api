@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/api"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/config"
@@ -23,7 +25,6 @@ import (
 
 func main() {
 	ctx := context.Background()
-
 	cfg := config.GetConfig()
 
 	server := echo.New()
@@ -40,20 +41,31 @@ func main() {
 		AllowMethods: []string{echo.GET, echo.HEAD, echo.PUT, echo.POST},
 	}))
 
-	// repository
+	timeLocation, err := time.LoadLocation(cfg.TimeLocation)
+	if err != nil {
+		easyzap.Fatal(fmt.Errorf("Failed to load timeLocation %s: %w", timeLocation, err))
+	}
+
+	// dao
 	pool := postgres.CreatePool(ctx, &cfg.Database)
-	ownerRepository := dao.NewOwnerDao(pool)
-	slugRepository := dao.NewSlugDao(pool)
-	regionRepository := dao.NewRegionDao(pool)
-	merchantRepository := dao.NewMerchantDao(pool)
-	campaignRepository := dao.NewCampaignRepository(pool)
+	ownerDao := dao.NewOwnerDao(pool)
+	slugDao := dao.NewSlugDao(pool)
+	regionDao := dao.NewRegionDao(pool)
+	merchantDao := dao.NewMerchantDao(pool)
+	campaignDao := dao.NewCampaignDao(pool)
+	campaignHistoryDao := dao.NewCampaignHistoryDao(pool)
+	slugHistoryDao := dao.NewSlugHistoryDao(pool)
+	regionHistoryDao := dao.NewRegionHistoryDao(pool)
+	spentDao := dao.NewSpentDao(pool)
 
 	// service
-	ownerService := service.NewOwnerService(ownerRepository)
-	slugService := service.NewSlugService(slugRepository)
-	regionService := service.NewRegionService(regionRepository)
-	merchantService := service.NewMerchantService(merchantRepository)
-	campaignService := service.NewCampaignService(campaignRepository)
+	ownerService := service.NewOwnerService(ownerDao)
+	slugService := service.NewSlugService(slugDao, slugHistoryDao)
+	regionService := service.NewRegionService(regionDao, regionHistoryDao)
+	merchantService := service.NewMerchantService(merchantDao)
+	spentService := service.NewSpentService(spentDao)
+	bucketService := service.NewBucketService(timeLocation)
+	campaignService := service.NewCampaignService(campaignDao, campaignHistoryDao, spentService, bucketService)
 
 	// handler
 	ownerHandler := handler.MakeOwnerEventHandler(ownerService)
