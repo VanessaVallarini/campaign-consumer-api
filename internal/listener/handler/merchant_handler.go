@@ -16,20 +16,23 @@ type MerchantService interface {
 
 func MakeMerchantEventHandler(merchantService MerchantService) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
 	return func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
+		ctx := context.Background()
+
 		if msg == nil {
-			easyzap.Error("invalid message pointer")
-
-			return errors.New("Invalid message pointer")
-		}
-
-		var merchant model.Merchant
-		if err := srClient.Decode(msg.Value, &merchant, subject); err != nil {
-			easyzap.Error(err, "error during decode message consumer kafka on create or update merchant")
+			err := errors.New("Invalid message pointer")
+			easyzap.Error(ctx, err)
 
 			return err
 		}
 
-		if err := merchantService.Upsert(context.Background(), merchant); err != nil {
+		var merchant model.Merchant
+		if err := srClient.Decode(msg.Value, &merchant, subject); err != nil {
+			easyzap.Error(ctx, err, "error during decode message consumer kafka on create or update merchant")
+
+			return err
+		}
+
+		if err := merchantService.Upsert(ctx, merchant); err != nil {
 
 			return err
 		}

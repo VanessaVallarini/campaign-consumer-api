@@ -35,14 +35,14 @@ func NewSlugService(slugDao SlugDao, slugHistoryDao SlugHistoryDao) SlugService 
 func (ss SlugService) Upsert(ctx context.Context, slug model.Slug) error {
 	err := slug.ValidateSlug()
 	if err != nil {
-		easyzap.Error(err, "invalid slug: %w", err)
+		easyzap.Error(err, "invalid slug")
 
 		return model.ErrInvalid
 	}
 
 	slugDb, err := ss.slugDao.Fetch(ctx, slug.Id)
 	if err != nil && err != model.ErrNotFound {
-		easyzap.Error(err, "fail to fetch slug by slugId: %s", slug.Id.String())
+		easyzap.Errorf("fail to fetch slug by slugId %s: %v", slug.Id.String(), err)
 
 		return err
 	}
@@ -50,14 +50,14 @@ func (ss SlugService) Upsert(ctx context.Context, slug model.Slug) error {
 	if err != nil && err == model.ErrNotFound {
 		err := ss.slugDao.Create(ctx, slug)
 		if err != nil {
-			easyzap.Error(err, "fail to create slug: %v", slug)
+			easyzap.Errorf("fail to create slug %v: %v", slug, err)
 
 			return err
 		}
 	} else {
 		err = ss.slugDao.Update(ctx, slug)
 		if err != nil {
-			easyzap.Error(err, "fail to update slugDb %v to slug %v", slugDb, slug)
+			easyzap.Errorf("fail to update slugDb %v to slug %v: %v", slugDb, slug, err)
 
 			return err
 		}
@@ -65,11 +65,11 @@ func (ss SlugService) Upsert(ctx context.Context, slug model.Slug) error {
 
 	err = ss.registryHistory(ctx, slug, &slugDb)
 	if err != nil {
-		easyzap.Error(err, "fail to registry history slugDb %v to slug %v", slugDb, slug)
+		easyzap.Errorf("fail to registry history slugDb %v to slug %v: %v", slugDb, slug, err)
 		slug.Status = string(model.Cancelled)
 		errRollback := ss.slugDao.Update(ctx, slugDb)
 		if errRollback != nil {
-			easyzap.Error(err, "[INCONSISTENT] fail to rollback slug %v to slugDb %v", slug, slugDb)
+			easyzap.Errorf("[INCONSISTENT] fail to rollback slug %v to slugDb %v: %v", slug, slugDb, err)
 
 			return err
 		}
@@ -91,7 +91,7 @@ func (ss SlugService) registryHistory(ctx context.Context, slug model.Slug, slug
 			CreatedAt:   slug.UpdatedAt,
 		})
 		if err != nil {
-			easyzap.Error(err, "fail to registry history slug create: %v", slug)
+			easyzap.Errorf("fail to registry history slug create %v: %v", slug, err)
 
 			return err
 		}
@@ -106,7 +106,7 @@ func (ss SlugService) registryHistory(ctx context.Context, slug model.Slug, slug
 				CreatedAt:   slug.UpdatedAt,
 			})
 			if err != nil {
-				easyzap.Error(err, "fail to registry history slug status from %s to %s for slugId: %v", slugDb.Status, slug.Status, slug.Id)
+				easyzap.Errorf("fail to registry history slug status from %s to %s for slugId %s: %v", slugDb.Status, slug.Status, slug.Id.String(), err)
 
 				return err
 			}
@@ -122,7 +122,7 @@ func (ss SlugService) registryHistory(ctx context.Context, slug model.Slug, slug
 				CreatedAt:   slug.UpdatedAt,
 			})
 			if err != nil {
-				easyzap.Error(err, "fail to registry history slug cost from %s to %s for slugId: %v", slugDb.Cost, slug.Cost, slug.Id)
+				easyzap.Errorf("fail to registry history slug cost from %.2f to %.2f for slugId %s: %v", slugDb.Cost, slug.Cost, slug.Id.String(), err)
 
 				return err
 			}

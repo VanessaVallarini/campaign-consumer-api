@@ -85,7 +85,7 @@ func initConfig() {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			// Config file was found but another error was produced
 			err := errors.Wrapf(err, "Error reading config file: %s", err)
-			easyzap.Fatal(context.Background(), err, "Unable to keep the service without config file")
+			easyzap.Fatal(context.Background(), err, "unable to keep the service without config file")
 		}
 	}
 

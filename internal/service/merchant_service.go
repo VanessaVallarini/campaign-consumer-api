@@ -26,7 +26,7 @@ func NewMerchantService(merchantDao MerchantDao) MerchantService {
 func (ms MerchantService) Upsert(ctx context.Context, merchant model.Merchant) error {
 	err := merchant.ValidateMerchant()
 	if err != nil {
-		easyzap.Error(err, "upsert merchant fail : %w", err)
+		easyzap.Error("upsert merchant for merchant id %s fail: %v", merchant.Id.String(), err)
 
 		return model.ErrInvalid
 	}

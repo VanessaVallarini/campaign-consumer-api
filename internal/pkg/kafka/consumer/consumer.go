@@ -51,15 +51,15 @@ func (c Consumer) ConsumerStart(brokerConfig config.KafkaConfig) {
 			ctx := context.Background()
 			handler := sarama.ConsumerGroupHandler(&c)
 			if err := c.saramaConsumerGroup.Consume(ctx, []string{brokerConfig.Topic}, handler); err != nil {
-				easyzap.Error(err, "failed create consumer")
+				easyzap.Error(ctx, err, "failed create consumer")
 			}
 			if ctx.Err() != nil {
 				err := c.saramaConsumerGroup.Close()
 				if err != nil {
-					easyzap.Error(err, "failed to close consumer")
+					easyzap.Error(ctx, err, "failed to close consumer")
 				}
 
-				easyzap.Info("consumer closed, consuming again")
+				easyzap.Info(ctx, "consumer closed, consuming again")
 			}
 
 			c.ready = make(chan bool)
@@ -82,7 +82,7 @@ func (c Consumer) ConsumerStart(brokerConfig config.KafkaConfig) {
 
 	wg.Wait()
 	if err := c.saramaConsumerGroup.Close(); err != nil {
-		easyzap.Fatalf("Error closing groupClient: %v", err)
+		easyzap.Fatalf("error closing groupClient: %v", err)
 	}
 }
 

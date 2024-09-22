@@ -64,7 +64,7 @@ func (od OwnerDao) Upsert(ctx context.Context, owner model.Owner) error {
 		owner.UpdatedAt,
 	)
 	if err != nil {
-		easyzap.Error(err, "failed to create or update merchant in database")
+		easyzap.Error(ctx, err, "failed to create or update merchant in database")
 
 		return errors.Wrap(err, "Failed to create or update owner in database")
 	}

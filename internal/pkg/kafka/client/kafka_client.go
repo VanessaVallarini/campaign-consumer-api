@@ -81,7 +81,7 @@ func createTopic(topic string, srClusterAdmin sarama.ClusterAdmin) error {
 		},
 		false)
 	if err != nil {
-		easyzap.Warnf("kafka client failed create topic: %s. details: %v", topic, err)
+		easyzap.Warnf("kafka client failed create topic %s: %v", topic, err)
 	}
 	return nil
 }

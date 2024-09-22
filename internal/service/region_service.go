@@ -34,14 +34,14 @@ func NewRegionService(regionDao RegionDao, regionHistoryDao RegionHistoryDao) Re
 func (rs RegionService) Upsert(ctx context.Context, region model.Region) error {
 	err := region.ValidateRegion()
 	if err != nil {
-		easyzap.Error(err, "invalid region: %w", err)
+		easyzap.Error(err, "invalid region")
 
 		return model.ErrInvalid
 	}
 
 	regionDb, err := rs.regionDao.Fetch(ctx, region.Id)
 	if err != nil && err != model.ErrNotFound {
-		easyzap.Error(err, "fail to fetch region by regionId: %s", region.Id.String())
+		easyzap.Errorf("fail to fetch region by regionId %s: %v", region.Id.String(), err)
 
 		return err
 	}
@@ -49,14 +49,14 @@ func (rs RegionService) Upsert(ctx context.Context, region model.Region) error {
 	if err != nil && err == model.ErrNotFound {
 		err := rs.regionDao.Create(ctx, region)
 		if err != nil {
-			easyzap.Error(err, "fail to create region: %v", region)
+			easyzap.Errorf("fail to create region %v: %v", region, err)
 
 			return err
 		}
 	} else {
 		err = rs.regionDao.Update(ctx, region)
 		if err != nil {
-			easyzap.Error(err, "fail to update regionDb %v to region %v", regionDb, region)
+			easyzap.Errorf("fail to update regionDb %v to region %v: %v", regionDb, region, err)
 
 			return err
 		}
@@ -64,11 +64,11 @@ func (rs RegionService) Upsert(ctx context.Context, region model.Region) error {
 
 	err = rs.registryHistory(ctx, region, &regionDb)
 	if err != nil {
-		easyzap.Error(err, "fail to registry history regionDb %v to region %v", regionDb, region)
+		easyzap.Errorf("fail to registry history regionDb %v to region %v: %v", regionDb, region, err)
 		region.Status = string(model.Cancelled)
 		errRollback := rs.regionDao.Update(ctx, regionDb)
 		if errRollback != nil {
-			easyzap.Error(err, "[INCONSISTENT] fail to rollback region %v to regionDb %v", region, regionDb)
+			easyzap.Errorf("[INCONSISTENT] fail to rollback region %v to regionDb %v: %v", region, regionDb, err)
 
 			return err
 		}
@@ -90,7 +90,7 @@ func (rs RegionService) registryHistory(ctx context.Context, region model.Region
 			CreatedAt:   region.UpdatedAt,
 		})
 		if err != nil {
-			easyzap.Error(err, "fail to registry history region create: %v", region)
+			easyzap.Errorf("fail to registry history region create %v: %v", region, region)
 
 			return err
 		}
@@ -105,7 +105,7 @@ func (rs RegionService) registryHistory(ctx context.Context, region model.Region
 				CreatedAt:   region.UpdatedAt,
 			})
 			if err != nil {
-				easyzap.Error(err, "fail to registry history region status from %s to %s for regionId: %v", regionDb.Status, region.Status, region.Id)
+				easyzap.Errorf("fail to registry history region status from %s to %s for regionId %s: %v", regionDb.Status, region.Status, region.Id.String(), err)
 
 				return err
 			}
@@ -121,7 +121,7 @@ func (rs RegionService) registryHistory(ctx context.Context, region model.Region
 				CreatedAt:   region.UpdatedAt,
 			})
 			if err != nil {
-				easyzap.Error(err, "fail to registry history region cost from %s to %s for regionId: %v", regionDb.Cost, region.Cost, region.Id)
+				easyzap.Errorf("fail to registry history region cost from %.2f to %.2f for regionId %s: %v", regionDb.Cost, region.Cost, region.Id.String(), err)
 
 				return err
 			}

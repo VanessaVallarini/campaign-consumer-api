@@ -46,14 +46,14 @@ func NewCampaignService(campaignDao CampaignDao, campaignHistoryDao CampaignHist
 func (cs CampaignService) Upsert(ctx context.Context, campaign model.Campaign) error {
 	err := campaign.ValidateCampaign()
 	if err != nil {
-		easyzap.Error(err, "invalid campaign: %w", err)
+		easyzap.Errorf("invalid campaign %v: %v", campaign, err)
 
 		return model.ErrInvalid
 	}
 
 	campaignDb, err := cs.campaignDao.Fetch(ctx, campaign.Id)
 	if err != nil && err != model.ErrNotFound {
-		easyzap.Error(err, "fail to fetch campaign by campaignId: %s", campaign.Id.String())
+		easyzap.Errorf("fail to fetch campaign by campaignId %s: %v", campaign.Id.String(), err)
 
 		return err
 	}
@@ -61,7 +61,7 @@ func (cs CampaignService) Upsert(ctx context.Context, campaign model.Campaign) e
 	if err != nil && err == model.ErrNotFound {
 		err := cs.campaignDao.Create(ctx, campaign)
 		if err != nil {
-			easyzap.Error(err, "fail to create campaign: %v", campaign)
+			easyzap.Errorf("fail to create campaign %v: %v", campaign, err)
 
 			return err
 		}
@@ -78,7 +78,7 @@ func (cs CampaignService) Upsert(ctx context.Context, campaign model.Campaign) e
 
 		err = cs.campaignDao.Update(ctx, campaign)
 		if err != nil {
-			easyzap.Error(err, "fail to update campaignDb %v to campaign %v", campaignDb, campaign)
+			easyzap.Errorf("fail to update campaignDb %v to campaign %v: %v", campaignDb, campaign, err)
 
 			return err
 		}
@@ -86,11 +86,11 @@ func (cs CampaignService) Upsert(ctx context.Context, campaign model.Campaign) e
 
 	err = cs.registryHistory(ctx, campaign, &campaignDb)
 	if err != nil {
-		easyzap.Error(err, "fail to registry history campaignDb %v to campaign %v", campaignDb, campaign)
+		easyzap.Errorf("fail to registry history campaignDb %v to campaign %v: %v", campaignDb, campaign, err)
 		campaign.Status = string(model.Cancelled)
 		errRollback := cs.campaignDao.Update(ctx, campaignDb)
 		if errRollback != nil {
-			easyzap.Error(err, "[INCONSISTENT] fail to rollback campaign %v to campaignDb %v", campaign, campaignDb)
+			easyzap.Errorf("[INCONSISTENT] fail to rollback campaign %v to campaignDb %v: %v", campaign, campaignDb, err)
 
 			return err
 		}
@@ -112,7 +112,7 @@ func (cs CampaignService) shouldUpdateAndActivateCampaign(ctx context.Context, c
 			return true, false
 		}
 
-		easyzap.Error(err, "fail to fetch spent by campaign id %v", campaign.Id)
+		easyzap.Errorf("fail to fetch spent by campaign id %s: %v", campaign.Id.String(), err)
 
 		return false, false
 	}
@@ -149,7 +149,7 @@ func (cs CampaignService) registryHistory(ctx context.Context, campaign model.Ca
 			CreatedAt:   campaign.UpdatedAt,
 		})
 		if err != nil {
-			easyzap.Error(err, "fail to registry history campaign create: %v", campaign)
+			easyzap.Errorf("fail to registry history campaign create %v: %v", campaign, err)
 
 			return err
 		}
@@ -164,7 +164,7 @@ func (cs CampaignService) registryHistory(ctx context.Context, campaign model.Ca
 				CreatedAt:   campaign.UpdatedAt,
 			})
 			if err != nil {
-				easyzap.Error(err, "fail to registry history campaign status from %s to %s for campaignId: %v", campaignDb.Status, campaign.Status, campaign.Id)
+				easyzap.Errorf("fail to registry history campaign status from %s to %s for campaignId %s: %v", campaignDb.Status, campaign.Status, campaign.Id.String(), err)
 
 				return err
 			}
@@ -180,7 +180,7 @@ func (cs CampaignService) registryHistory(ctx context.Context, campaign model.Ca
 				CreatedAt:   campaign.UpdatedAt,
 			})
 			if err != nil {
-				easyzap.Error(err, "fail to registry history campaign budget from %s to %s for campaignId: %v", campaignDb.Budget, campaign.Budget, campaign.Id)
+				easyzap.Errorf("fail to registry history campaign budget from %.2f to %.2f for campaignId %s: %v", campaignDb.Budget, campaign.Budget, campaign.Id.String(), err)
 
 				return err
 			}

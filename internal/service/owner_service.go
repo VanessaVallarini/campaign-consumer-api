@@ -25,7 +25,7 @@ func NewOwnerService(ownerDao OwnerDao) OwnerService {
 func (os OwnerService) Upsert(ctx context.Context, owner model.Owner) error {
 	err := owner.ValidateOwner()
 	if err != nil {
-		easyzap.Error(err, "upsert owner fail : %w", err)
+		easyzap.Error("upsert owner for owner id %s fail: %v", owner.Id.String(), err)
 
 		return model.ErrInvalid
 	}

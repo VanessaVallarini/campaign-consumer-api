@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -43,7 +42,7 @@ func main() {
 
 	timeLocation, err := time.LoadLocation(cfg.TimeLocation)
 	if err != nil {
-		easyzap.Fatal(fmt.Errorf("Failed to load timeLocation %s: %w", timeLocation, err))
+		easyzap.Fatal(ctx, err, "failed to load timeLocation")
 	}
 
 	// dao
@@ -99,7 +98,7 @@ func main() {
 
 	// Start HTTP server
 	go func() {
-		easyzap.Info(ctx, "Starting http worker server at "+cfg.ServerHost)
+		easyzap.Info(ctx, "starting http worker server at "+cfg.ServerHost)
 		err := server.Start(cfg.ServerHost)
 		easyzap.Fatal(ctx, err, "failed to start server")
 	}()
@@ -114,7 +113,7 @@ func main() {
 
 	// starts meta application
 	go func() {
-		easyzap.Info(ctx, "Starting metadata worker server at "+cfg.MetaHost)
+		easyzap.Info(ctx, "starting metadata worker server at "+cfg.MetaHost)
 		err := meta.Start(cfg.MetaHost)
 		easyzap.Fatal(ctx, err, "failed to start meta server")
 	}()
@@ -124,9 +123,9 @@ func main() {
 	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
 	switch <-signalChannel {
 	case os.Interrupt:
-		easyzap.Info(context.Background(), "Received SIGINT, stopping...")
+		easyzap.Info(context.Background(), "received SIGINT, stopping...")
 	case syscall.SIGTERM:
-		easyzap.Info(context.Background(), "Received SIGTERM, stopping...")
+		easyzap.Info(context.Background(), "received SIGTERM, stopping...")
 	}
 
 }

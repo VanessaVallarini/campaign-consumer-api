@@ -48,7 +48,7 @@ func CreatePool(ctx context.Context, cfg *config.DatabaseConfig) *pgxpool.Pool {
 		return nil
 	}
 
-	easyzap.Info("database connection pool created successfully.")
+	easyzap.Info(ctx, "database connection pool created successfully.")
 
 	return pool
 }

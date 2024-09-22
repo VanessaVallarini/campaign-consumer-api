@@ -16,20 +16,23 @@ type SlugService interface {
 
 func MakeSlugEventHandler(slugService SlugService) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
 	return func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
+		ctx := context.Background()
+
 		if msg == nil {
-			easyzap.Error("invalid message pointer")
-
-			return errors.New("Invalid message pointer")
-		}
-
-		var slug model.Slug
-		if err := srClient.Decode(msg.Value, &slug, subject); err != nil {
-			easyzap.Error(err, "error during decode message consumer kafka on create or update slug")
+			err := errors.New("Invalid message pointer")
+			easyzap.Error(ctx, err)
 
 			return err
 		}
 
-		if err := slugService.Upsert(context.Background(), slug); err != nil {
+		var slug model.Slug
+		if err := srClient.Decode(msg.Value, &slug, subject); err != nil {
+			easyzap.Error(ctx, err, "error during decode message consumer kafka on create or update slug")
+
+			return err
+		}
+
+		if err := slugService.Upsert(ctx, slug); err != nil {
 
 			return err
 		}

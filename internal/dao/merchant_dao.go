@@ -78,7 +78,7 @@ func (md MerchantDao) Upsert(ctx context.Context, merchant model.Merchant) error
 		merchant.UpdatedAt,
 	)
 	if err != nil {
-		easyzap.Error(err, "failed to create or update merchant in database")
+		easyzap.Error(ctx, err, "failed to create or update merchant in database")
 
 		return errors.Wrap(err, "Failed to create or update merchant in database")
 	}
@@ -103,7 +103,7 @@ func (md MerchantDao) Fetch(ctx context.Context, id uuid.UUID) (model.Merchant, 
 
 			return model.Merchant{}, model.ErrNotFound
 		}
-		easyzap.Error(err, "failed to fetch merchant in database")
+		easyzap.Error(ctx, err, "failed to fetch merchant in database")
 
 		return model.Merchant{}, errors.Wrap(err, "Failed to fetch merchant in database")
 	}

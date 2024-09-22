@@ -31,7 +31,7 @@ func (tm TransactionManager) Execute(ctx context.Context, fn func(ctx context.Co
 		if err != nil {
 			errRollback := tx.Rollback(ctx)
 			if errRollback != nil {
-				easyzap.Error(errRollback, "[INCONSISTENCY] Failed to rollback operation")
+				easyzap.Error(ctx, errRollback, "[INCONSISTENCY] Failed to rollback operation")
 			}
 		}
 	}()

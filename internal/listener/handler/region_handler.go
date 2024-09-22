@@ -16,20 +16,23 @@ type RegionService interface {
 
 func MakeRegionEventHandler(regionService RegionService) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
 	return func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
+		ctx := context.Background()
+
 		if msg == nil {
-			easyzap.Error("invalid message pointer")
-
-			return errors.New("Invalid message pointer")
-		}
-
-		var region model.Region
-		if err := srClient.Decode(msg.Value, &region, subject); err != nil {
-			easyzap.Error(err, "error during decode message consumer kafka on create or update region")
+			err := errors.New("Invalid message pointer")
+			easyzap.Error(ctx, err)
 
 			return err
 		}
 
-		if err := regionService.Upsert(context.Background(), region); err != nil {
+		var region model.Region
+		if err := srClient.Decode(msg.Value, &region, subject); err != nil {
+			easyzap.Error(ctx, err, "error during decode message consumer kafka on create or update region")
+
+			return err
+		}
+
+		if err := regionService.Upsert(ctx, region); err != nil {
 
 			return err
 		}

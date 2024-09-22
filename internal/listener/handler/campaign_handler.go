@@ -16,20 +16,23 @@ type CampaignService interface {
 
 func MakeCampaignEventHandler(campaignService CampaignService) func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
 	return func(msg *sarama.ConsumerMessage, srClient client.SchemaRegistryClient, subject string) error {
+		ctx := context.Background()
+
 		if msg == nil {
-			easyzap.Error("invalid message pointer")
-
-			return errors.New("Invalid message pointer")
-		}
-
-		var campaign model.Campaign
-		if err := srClient.Decode(msg.Value, &campaign, subject); err != nil {
-			easyzap.Error(err, "error during decode message consumer kafka on create or update campaign")
+			err := errors.New("Invalid message pointer")
+			easyzap.Error(ctx, err)
 
 			return err
 		}
 
-		if err := campaignService.Upsert(context.Background(), campaign); err != nil {
+		var campaign model.Campaign
+		if err := srClient.Decode(msg.Value, &campaign, subject); err != nil {
+			easyzap.Error(ctx, err, "error during decode message consumer kafka on create or update campaign")
+
+			return err
+		}
+
+		if err := campaignService.Upsert(ctx, campaign); err != nil {
 
 			return err
 		}
