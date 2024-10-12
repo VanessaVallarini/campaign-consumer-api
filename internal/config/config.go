@@ -13,18 +13,18 @@ import (
 )
 
 type Config struct {
-	AppName              string
-	ServerHost           string
-	MetaHost             string
-	TimeLocation         string
-	Database             DatabaseConfig
-	KafkaOwner           KafkaConfig
-	KafkaSlug            KafkaConfig
-	KafkaRegion          KafkaConfig
-	KafkaMerchant        KafkaConfig
-	KafkaCampaign        KafkaConfig
-	KafkaClickImpression KafkaConfig
-	RedisConfig          RedisConfig
+	AppName       string
+	ServerHost    string
+	MetaHost      string
+	TimeLocation  string
+	Database      DatabaseConfig
+	KafkaOwner    KafkaConfig
+	KafkaSlug     KafkaConfig
+	KafkaRegion   KafkaConfig
+	KafkaMerchant KafkaConfig
+	KafkaCampaign KafkaConfig
+	KafkaSpent    KafkaConfig
+	RedisConfig   RedisConfig
 }
 
 type DatabaseConfig struct {
@@ -237,7 +237,7 @@ func GetConfig() Config {
 					Password: viperCfg.GetString("kafka-campaign.schema-registry.password"),
 				},
 			},
-			KafkaClickImpression: KafkaConfig{
+			KafkaSpent: KafkaConfig{
 				ClientId:          viperCfg.GetString("kafka.client-id"),
 				ConsumerGroupId:   viperCfg.GetString("kafka.consumer-group-id"),
 				Brokers:           viperCfg.GetStringSlice("kafka.brokers"),
@@ -247,16 +247,16 @@ func GetConfig() Config {
 				EnableTLS:         viperCfg.GetBool("kafka.enable-tls"),
 				EnableEvents:      viperCfg.GetBool("kafka.enable-events"),
 				SaslMechanism:     viperCfg.GetString("kafka.sasl-mechanism"),
-				User:              viperCfg.GetString("kafka-click-impression.user"),
-				Password:          viperCfg.GetString("kafka-click-impression.password"),
+				User:              viperCfg.GetString("kafka-spent.user"),
+				Password:          viperCfg.GetString("kafka-spent.password"),
 				RetryMax:          viperCfg.GetInt("kafka.retry-max"),
-				Topic:             viperCfg.GetString("kafka-click-impression.topic"),
-				Subject:           viperCfg.GetString("kafka-click-impression.subject"),
+				Topic:             viperCfg.GetString("kafka-spent.topic"),
+				Subject:           viperCfg.GetString("kafka-spent.subject"),
 				BalanceStrategy:   sarama.NewBalanceStrategyRoundRobin(),
 				SchemaRegistryConfig: SchemaRegistryConfig{
 					Host:     viperCfg.GetString("kafka.schema-registry.host"),
-					User:     viperCfg.GetString("kafka-click-impression.schema-registry.user"),
-					Password: viperCfg.GetString("kafka-click-impression.schema-registry.password"),
+					User:     viperCfg.GetString("kafka-spent.schema-registry.user"),
+					Password: viperCfg.GetString("kafka-spent.schema-registry.password"),
 				},
 			},
 			RedisConfig: RedisConfig{

@@ -17,4 +17,4 @@ kafka:
     host: http://localhost:8086
 redis:
   rw: localhost:6379
-  ro: localhost:6380
+  ro: localhost:6379

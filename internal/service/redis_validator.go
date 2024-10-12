@@ -24,7 +24,7 @@ func NewRedisValidator(client CacheClient, ttl time.Duration) *Validator {
 }
 
 func (v Validator) SetIfNotExists(ctx context.Context, uniqueKey string, value []byte) (bool, error) {
-	createOperationWasPerformed, err := v.cacheClient.SetIfNotExists(ctx, uniqueKey, []byte{}, v.ttl)
+	createOperationWasPerformed, err := v.cacheClient.SetIfNotExists(ctx, uniqueKey, value, v.ttl)
 	if err != nil {
 
 		return false, err

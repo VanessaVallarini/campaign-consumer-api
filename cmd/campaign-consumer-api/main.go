@@ -11,6 +11,7 @@ import (
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/config"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/dao"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/listener/handler"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/listener/processor"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/client"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/consumer"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/postgres"
@@ -75,8 +76,10 @@ func main() {
 	bucketService := service.NewBucketService(timeLocation)
 	ledgerServce := service.NewLedgerService(ledgerDao)
 	spentService := service.NewSpentService(spentDao, transactionManager, ledgerServce)
-
 	campaignService := service.NewCampaignService(campaignDao, campaignHistoryDao, spentService, bucketService, transactionManager)
+
+	// processor
+	spentProcessor := processor.NewSpentProcessor(spentService, campaignService, merchantService, slugService, regionService, ledgerServce, bucketService)
 
 	// handler
 	ownerHandler := handler.MakeOwnerEventHandler(ownerService)
@@ -84,12 +87,14 @@ func main() {
 	regionHandler := handler.MakeRegionEventHandler(regionService)
 	merchantHandler := handler.MakeMerchantEventHandler(merchantService)
 	campaignHandler := handler.MakeCampaignEventHandler(campaignService)
+	spentHandler := handler.MakeSpentEventHandler(spentProcessor)
 
 	ownerSrClient := client.NewSchemaRegistry(cfg.KafkaOwner)
 	slugSrClient := client.NewSchemaRegistry(cfg.KafkaSlug)
 	regionSrClient := client.NewSchemaRegistry(cfg.KafkaRegion)
 	merchantSrClient := client.NewSchemaRegistry(cfg.KafkaMerchant)
 	campaignSrClient := client.NewSchemaRegistry(cfg.KafkaCampaign)
+	spentSrClient := client.NewSchemaRegistry(cfg.KafkaSpent)
 
 	//consumer
 	ownerConsumer := consumer.NewConsumer(ctx, cfg.KafkaOwner, ownerSrClient, ownerHandler)
@@ -106,6 +111,9 @@ func main() {
 
 	campaignConsumer := consumer.NewConsumer(ctx, cfg.KafkaCampaign, campaignSrClient, campaignHandler)
 	go campaignConsumer.ConsumerStart(cfg.KafkaCampaign)
+
+	spentConsumer := consumer.NewConsumer(ctx, cfg.KafkaSpent, spentSrClient, spentHandler)
+	go spentConsumer.ConsumerStart(cfg.KafkaSpent)
 
 	// Start HTTP server
 	go func() {

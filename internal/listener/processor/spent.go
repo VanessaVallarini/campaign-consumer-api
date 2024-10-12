@@ -1,4 +1,4 @@
-package service
+package processor
 
 import (
 	"context"
@@ -59,6 +59,7 @@ func NewSpentProcessor(
 	spentManager SpentManager,
 	campaignManager CampaignManager,
 	merchantRetriever MerchantRetriever,
+	slugRetriever SlugRetriever,
 	regionRetriever RegionRetriever,
 	ledgerManager LedgerManager,
 	bucket BucketFetcher) SpentProcessor {
@@ -66,6 +67,7 @@ func NewSpentProcessor(
 		spentManager:      spentManager,
 		campaignManager:   campaignManager,
 		merchantRetriever: merchantRetriever,
+		slugRetriever:     slugRetriever,
 		regionRetriever:   regionRetriever,
 		ledgerManager:     ledgerManager,
 		bucket:            bucket,
@@ -92,13 +94,13 @@ func (sp SpentProcessor) ProcessSpentEvent(ctx context.Context, spentEvent model
 		return err
 	}
 
-	slug, err := sp.fetchSlug(ctx, spentEvent.SlugName)
+	region, err := sp.fetchRegion(ctx, merchant.RegionId)
 	if err != nil {
 
 		return err
 	}
 
-	region, err := sp.fetchRegion(ctx, merchant.RegionId)
+	slug, err := sp.fetchSlug(ctx, spentEvent.SlugName)
 	if err != nil {
 
 		return err

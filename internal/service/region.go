@@ -94,6 +94,7 @@ func (rs RegionService) createAndRegistryHistory(ctx context.Context, region mod
 }
 
 func (rs RegionService) updateAndRegistryHistory(ctx context.Context, region model.Region, regionDb *model.Region) error {
+	rs.SaveInRedis(ctx, region)
 	funcWithTransaction := func(ctx context.Context, tx transaction.Transaction) error {
 		err := rs.regionDao.Update(ctx, tx, region)
 		if err != nil {
@@ -146,7 +147,7 @@ func (rs RegionService) buildHistory(region model.Region, regionDb *model.Region
 	return history
 }
 
-// Fetch region iin redis
+// Fetch region in redis
 func (rs RegionService) Fetch(ctx context.Context, regionId uuid.UUID) (model.Region, error) {
 
 	value, err := rs.regioinRedisValidator.Get(ctx, rs.uniqueKey(regionId))

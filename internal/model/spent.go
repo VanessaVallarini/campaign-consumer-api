@@ -78,7 +78,7 @@ const (
 			},
 			{
 				"name": "slug_name",
-				"type": "type": "string"
+				"type": "string"
 			},
 			{
 				"name": "user_id",
@@ -107,14 +107,14 @@ const (
 )
 
 type SpentEvent struct {
-	CampaignId uuid.UUID `json:"campaign_id"`
-	MerchantId uuid.UUID `json:"merchant_id"`
-	SessionId  uuid.UUID `json:"session_id"`
-	SlugName   string    `json:"slug_name"`
-	UserId     uuid.UUID `json:"user_id"`
-	EventType  string    `json:"event_type"`
-	IP         string    `json:"ip"`
-	EventTime  time.Time `json:"event_time"`
+	CampaignId uuid.UUID `json:"campaign_id" avro:"campaign_id"`
+	MerchantId uuid.UUID `json:"merchant_id" avro:"merchant_id"`
+	SessionId  uuid.UUID `json:"session_id" avro:"session_id"`
+	SlugName   string    `json:"slug_name" avro:"slug_name"`
+	UserId     uuid.UUID `json:"user_id" avro:"user_id"`
+	EventType  string    `json:"event_type" avro:"event_type"`
+	IP         string    `json:"ip" avro:"ip"`
+	EventTime  time.Time `json:"event_time" avro:"event_time"`
 }
 
 func (se SpentEvent) ValidateSpentEvent() error {
