@@ -94,7 +94,6 @@ func (ss SlugService) createAndRegistryHistory(ctx context.Context, slug model.S
 }
 
 func (ss SlugService) updateAndRegistryHistory(ctx context.Context, slug model.Slug, slugDb *model.Slug) error {
-	ss.SaveInRedis(ctx, slug)
 	funcWithTransaction := func(ctx context.Context, tx transaction.Transaction) error {
 		err := ss.slugDao.Update(ctx, tx, slug)
 		if err != nil {
