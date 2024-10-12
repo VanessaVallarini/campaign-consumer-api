@@ -14,6 +14,7 @@ import (
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/client"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/consumer"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/postgres"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/redis"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/service"
 	"github.com/labstack/echo/v4"
@@ -46,6 +47,12 @@ func main() {
 		easyzap.Fatal(ctx, err, "failed to load timeLocation")
 	}
 
+	// client
+	redisClient := redis.NewRedisDataClient(cfg.RedisConfig.RWAddress, cfg.RedisConfig.ROAddress)
+	redisClient.Ping(ctx)
+	slugRedisValidator := service.NewRedisValidator(redisClient, cfg.RedisConfig.SlugTTL)
+	regionRedisValidator := service.NewRedisValidator(redisClient, cfg.RedisConfig.RegionTTL)
+
 	// dao
 	pool := postgres.CreatePool(ctx, &cfg.Database)
 	ownerDao := dao.NewOwnerDao(pool)
@@ -57,15 +64,18 @@ func main() {
 	slugHistoryDao := dao.NewSlugHistoryDao(pool)
 	regionHistoryDao := dao.NewRegionHistoryDao(pool)
 	spentDao := dao.NewSpentDao(pool)
+	ledgerDao := dao.NewLedgerDao(pool)
 	transactionManager := transaction.NewTransactionManager(pool)
 
 	// service
 	ownerService := service.NewOwnerService(ownerDao)
-	slugService := service.NewSlugService(slugDao, slugHistoryDao, transactionManager)
-	regionService := service.NewRegionService(regionDao, regionHistoryDao, transactionManager)
+	slugService := service.NewSlugService(slugDao, slugHistoryDao, transactionManager, slugRedisValidator)
+	regionService := service.NewRegionService(regionDao, regionHistoryDao, transactionManager, regionRedisValidator)
 	merchantService := service.NewMerchantService(merchantDao)
-	spentService := service.NewSpentService(spentDao)
 	bucketService := service.NewBucketService(timeLocation)
+	ledgerServce := service.NewLedgerService(ledgerDao)
+	spentService := service.NewSpentService(spentDao, transactionManager, ledgerServce)
+
 	campaignService := service.NewCampaignService(campaignDao, campaignHistoryDao, spentService, bucketService, transactionManager)
 
 	// handler
@@ -75,7 +85,6 @@ func main() {
 	merchantHandler := handler.MakeMerchantEventHandler(merchantService)
 	campaignHandler := handler.MakeCampaignEventHandler(campaignService)
 
-	// client
 	ownerSrClient := client.NewSchemaRegistry(cfg.KafkaOwner)
 	slugSrClient := client.NewSchemaRegistry(cfg.KafkaSlug)
 	regionSrClient := client.NewSchemaRegistry(cfg.KafkaRegion)

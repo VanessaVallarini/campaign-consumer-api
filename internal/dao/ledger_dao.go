@@ -9,18 +9,35 @@ import (
 	"github.com/pkg/errors"
 )
 
-type LedgerRepository struct {
+type LedgerDao struct {
 	pool *pgxpool.Pool
 }
 
-func NewLedgerRepository(pool *pgxpool.Pool) LedgerRepository {
-	return LedgerRepository{
+func NewLedgerDao(pool *pgxpool.Pool) LedgerDao {
+	return LedgerDao{
 		pool: pool,
 	}
 }
 
+const allLedgerFields = `
+	id,
+	spent_id,
+	campaign_id,
+	merchant_id,
+	slug_name,
+	region_name,
+	user_id,
+	event_type,
+	cost,
+	ip,
+	lat,
+	long, 
+	created_at, 
+	event_time
+`
+
 var createLedgerQuery = `
-	INSERT INTO ledger (id, campaign_id, spent_id, slug_id, user_id, event_type, cost, lat, long, created_at)
+	INSERT INTO ledger (` + allLedgerFields + `)
 	VALUES (
 		$1,
 		$2,
@@ -31,24 +48,32 @@ var createLedgerQuery = `
 		$7,
 		$8,
 		$9,
-		$10
+		$10,
+		$11,
+		$12,
+		$13,
+		$14
 	);
 `
 
-func (s LedgerRepository) Create(ctx context.Context, tx transaction.Transaction, ledger model.Ledger) error {
+func (ld LedgerDao) Create(ctx context.Context, tx transaction.Transaction, ledger model.Ledger) error {
 	err := tx.Exec(
 		ctx,
 		createLedgerQuery,
 		ledger.Id,
-		ledger.CampaignId,
 		ledger.SpentId,
-		ledger.SlugId,
+		ledger.CampaignId,
+		ledger.MerchantId,
+		ledger.SlugName,
+		ledger.RegionName,
 		ledger.UserId,
 		ledger.EventType,
 		ledger.Cost,
+		ledger.Ip,
 		ledger.Lat,
 		ledger.Long,
 		ledger.CreatedAt,
+		ledger.EventTime,
 	)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create ledger in database")

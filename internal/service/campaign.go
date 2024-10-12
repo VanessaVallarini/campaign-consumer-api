@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	teste "github.com/VanessaVallarini/address-api/pkg/api/proto/v1"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 	"github.com/google/uuid"
@@ -21,7 +22,7 @@ type CampaignHistoryDao interface {
 }
 
 type SpentFetcher interface {
-	FetchByCampaignIdAndBucket(ctx context.Context, id uuid.UUID, bucket string) (model.Spent, error)
+	FetchByMerchantIdAndBucket(ctx context.Context, id uuid.UUID, bucket string) (model.Spent, error)
 }
 
 type BucketFetcher interface {
@@ -37,6 +38,7 @@ type CampaignService struct {
 }
 
 func NewCampaignService(campaignDao CampaignDao, campaignHistoryDao CampaignHistoryDao, spentFetcher SpentFetcher, bucketFetcher BucketFetcher, tm TransactionManager) CampaignService {
+	teste.NewAddressClient(nil)
 	return CampaignService{
 		campaignDao:        campaignDao,
 		campaignHistoryDao: campaignHistoryDao,
@@ -164,14 +166,13 @@ func (cs CampaignService) buildHistory(campaign model.Campaign, campaignDb *mode
 }
 
 func (cs CampaignService) shouldUpdateAndActivateCampaign(ctx context.Context, campaign model.Campaign, campaignDb model.Campaign) (bool, bool) {
-	spent, err := cs.spentFetcher.FetchByCampaignIdAndBucket(ctx, campaign.Id, cs.bucketFetcher.CurrentBucket().Key)
+	spent, err := cs.spentFetcher.FetchByMerchantIdAndBucket(ctx, campaign.MerchantId, cs.bucketFetcher.CurrentBucket().Key)
 	if err != nil {
 		if err != model.ErrNotFound {
+			easyzap.Errorf("fail to fetch spent by campaign id %s: %v", campaign.Id.String(), err)
 
 			return true, false
 		}
-
-		easyzap.Errorf("fail to fetch spent by campaign id %s: %v", campaign.Id.String(), err)
 
 		return false, false
 	}
@@ -180,6 +181,7 @@ func (cs CampaignService) shouldUpdateAndActivateCampaign(ctx context.Context, c
 		campaign.Status == string(model.Active) &&
 		campaign.Budget <= campaignDb.Budget &&
 		campaign.Budget <= spent.TotalSpent {
+
 		return false, false
 
 	}
@@ -187,9 +189,14 @@ func (cs CampaignService) shouldUpdateAndActivateCampaign(ctx context.Context, c
 	if campaignDb.Status == string(model.Suspended) &&
 		campaign.Budget > campaignDb.Budget &&
 		campaign.Budget > spent.TotalSpent {
+
 		return true, true
 
 	}
 
 	return true, false
+}
+
+func (cs CampaignService) Fetch(ctx context.Context, campaignId uuid.UUID) (model.Campaign, error) {
+	return cs.campaignDao.Fetch(ctx, campaignId)
 }

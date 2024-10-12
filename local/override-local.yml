@@ -15,3 +15,6 @@ kafka:
   enable-events: false
   schema-registry:
     host: http://localhost:8086
+redis:
+  rw: localhost:6379
+  ro: localhost:6380

@@ -52,7 +52,14 @@ appConfigFile:
       kafka-campaign:
         topic: campaign.campaign
         subject: campaign.campaign_value
-      kafka-click-impression:
-        topic: campaign.campaign-click-impression
-        subject: campaign.campaign_click_impression_value
+      kafka-spent:
+        topic: campaign.campaign-spent
+        subject: campaign.campaign_spent_value
+      redis:
+        rw: dev:6379
+        ro: dev:6379
+        slug:
+          ttl: 86400
+        region:
+          ttl: 86400
       time-location: "America/Sao_Paulo"

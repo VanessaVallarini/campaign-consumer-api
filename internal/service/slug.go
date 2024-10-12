@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
@@ -21,16 +22,18 @@ type SlugHistoryDao interface {
 }
 
 type SlugService struct {
-	slugDao        SlugDao
-	slugHistoryDao SlugHistoryDao
-	tm             TransactionManager
+	slugDao            SlugDao
+	slugHistoryDao     SlugHistoryDao
+	tm                 TransactionManager
+	slugRedisValidator RedisValidator
 }
 
-func NewSlugService(slugDao SlugDao, slugHistoryDao SlugHistoryDao, tm TransactionManager) SlugService {
+func NewSlugService(slugDao SlugDao, slugHistoryDao SlugHistoryDao, tm TransactionManager, slugRedisValidator RedisValidator) SlugService {
 	return SlugService{
-		slugDao:        slugDao,
-		slugHistoryDao: slugHistoryDao,
-		tm:             tm,
+		slugDao:            slugDao,
+		slugHistoryDao:     slugHistoryDao,
+		tm:                 tm,
+		slugRedisValidator: slugRedisValidator,
 	}
 }
 
@@ -139,4 +142,53 @@ func (ss SlugService) buildHistory(slug model.Slug, slugDb *model.Slug) model.Sl
 	}
 
 	return history
+}
+
+// Fetch slug iin redis
+func (ss SlugService) Fetch(ctx context.Context, name string) (model.Slug, error) {
+
+	value, err := ss.slugRedisValidator.Get(ctx, ss.uniqueKey(name))
+	if err != nil {
+
+		return model.Slug{}, err
+	}
+
+	slugJSON, err := json.Marshal(value)
+	if err != nil {
+
+		return model.Slug{}, fmt.Errorf("failed to marshal slug: %w", err)
+	}
+
+	var slug model.Slug
+	err = json.Unmarshal(slugJSON, &slug)
+	if err != nil {
+
+		return model.Slug{}, fmt.Errorf("failed to unmarshal into slug: %w", err)
+	}
+
+	return slug, nil
+}
+
+// Operation performed at dawn
+// Postgres is loaded into Redis
+func (ss SlugService) SaveInRedis(ctx context.Context, slug model.Slug) (bool, error) {
+
+	slugJSON, err := json.Marshal(slug)
+	if err != nil {
+
+		return false, fmt.Errorf("failed to marshal slug: %w", err)
+	}
+
+	ok, err := ss.slugRedisValidator.SetIfNotExists(ctx, ss.uniqueKey(slug.Name), slugJSON)
+	if err != nil {
+
+		return ok, err
+	}
+
+	return ok, nil
+}
+
+func (ss SlugService) uniqueKey(slugName string) string {
+
+	return fmt.Sprintf("%s::slug", slugName)
 }

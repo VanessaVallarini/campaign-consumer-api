@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
@@ -21,16 +22,18 @@ type RegionHistoryDao interface {
 }
 
 type RegionService struct {
-	regionDao        RegionDao
-	regionHistoryDao RegionHistoryDao
-	tm               TransactionManager
+	regionDao             RegionDao
+	regionHistoryDao      RegionHistoryDao
+	tm                    TransactionManager
+	regioinRedisValidator RedisValidator
 }
 
-func NewRegionService(regionDao RegionDao, regionHistoryDao RegionHistoryDao, tm TransactionManager) RegionService {
+func NewRegionService(regionDao RegionDao, regionHistoryDao RegionHistoryDao, tm TransactionManager, regioinRedisValidator RedisValidator) RegionService {
 	return RegionService{
-		regionDao:        regionDao,
-		regionHistoryDao: regionHistoryDao,
-		tm:               tm,
+		regionDao:             regionDao,
+		regionHistoryDao:      regionHistoryDao,
+		tm:                    tm,
+		regioinRedisValidator: regioinRedisValidator,
 	}
 }
 
@@ -141,4 +144,53 @@ func (rs RegionService) buildHistory(region model.Region, regionDb *model.Region
 	}
 
 	return history
+}
+
+// Fetch region iin redis
+func (rs RegionService) Fetch(ctx context.Context, regionId uuid.UUID) (model.Region, error) {
+
+	value, err := rs.regioinRedisValidator.Get(ctx, rs.uniqueKey(regionId))
+	if err != nil {
+
+		return model.Region{}, err
+	}
+
+	regionJSON, err := json.Marshal(value)
+	if err != nil {
+
+		return model.Region{}, fmt.Errorf("failed to marshal region: %w", err)
+	}
+
+	var region model.Region
+	err = json.Unmarshal(regionJSON, &region)
+	if err != nil {
+
+		return model.Region{}, fmt.Errorf("failed to unmarshal into region: %w", err)
+	}
+
+	return region, nil
+}
+
+// Operation performed at dawn
+// Postgres is loaded into Redis
+func (rs RegionService) SaveInRedis(ctx context.Context, region model.Region) (bool, error) {
+
+	regionJSON, err := json.Marshal(region)
+	if err != nil {
+
+		return false, fmt.Errorf("failed to marshal region: %w", err)
+	}
+
+	ok, err := rs.regioinRedisValidator.SetIfNotExists(ctx, rs.uniqueKey(region.Id), regionJSON)
+	if err != nil {
+
+		return ok, err
+	}
+
+	return ok, nil
+}
+
+func (rs RegionService) uniqueKey(regionId uuid.UUID) string {
+
+	return fmt.Sprintf("%s::region", regionId.String())
 }

@@ -7,20 +7,20 @@ import (
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 )
 
-type LedgerRepository interface {
+type LedgerDao interface {
 	Create(context.Context, transaction.Transaction, model.Ledger) error
 }
 
 type LedgerService struct {
-	ledgerRepository LedgerRepository
+	ledgerDao LedgerDao
 }
 
-func NewLedgerService(ledgerRepository LedgerRepository) LedgerService {
+func NewLedgerService(ledgerDao LedgerDao) LedgerService {
 	return LedgerService{
-		ledgerRepository: ledgerRepository,
+		ledgerDao: ledgerDao,
 	}
 }
 
-func (s LedgerService) Create(ctx context.Context, tx transaction.Transaction, ledger model.Ledger) error {
-	return s.ledgerRepository.Create(ctx, tx, ledger)
+func (ls LedgerService) Create(ctx context.Context, tx transaction.Transaction, ledger model.Ledger) error {
+	return ls.ledgerDao.Create(ctx, tx, ledger)
 }

@@ -24,6 +24,7 @@ type Config struct {
 	KafkaMerchant        KafkaConfig
 	KafkaCampaign        KafkaConfig
 	KafkaClickImpression KafkaConfig
+	RedisConfig          RedisConfig
 }
 
 type DatabaseConfig struct {
@@ -67,9 +68,15 @@ type SchemaRegistryConfig struct {
 	Password string
 }
 
+type RedisConfig struct {
+	RWAddress string
+	ROAddress string
+	SlugTTL   time.Duration
+	RegionTTL time.Duration
+}
+
 var (
 	onceConfigs sync.Once
-	configInit  sync.Once
 	config      Config
 	viperCfg    = viper.New()
 )
@@ -84,7 +91,7 @@ func initConfig() {
 	if err := viperCfg.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			// Config file was found but another error was produced
-			err := errors.Wrapf(err, "Error reading config file: %s", err)
+			err := errors.Wrapf(err, "error reading config file: %s", err)
 			easyzap.Fatal(context.Background(), err, "unable to keep the service without config file")
 		}
 	}
@@ -100,7 +107,7 @@ func setConfigDefaults() {
 }
 
 func GetConfig() Config {
-	configInit.Do(initConfig)
+	initConfig()
 	onceConfigs.Do(func() {
 		config = Config{
 			AppName:      viperCfg.GetString("app.name"),
@@ -251,6 +258,12 @@ func GetConfig() Config {
 					User:     viperCfg.GetString("kafka-click-impression.schema-registry.user"),
 					Password: viperCfg.GetString("kafka-click-impression.schema-registry.password"),
 				},
+			},
+			RedisConfig: RedisConfig{
+				RWAddress: viperCfg.GetString("redis.rw"),
+				ROAddress: viperCfg.GetString("redis.ro"),
+				SlugTTL:   viperCfg.GetDuration("redis.slug.ttl") * time.Second,
+				RegionTTL: viperCfg.GetDuration("redis.region.ttl") * time.Second,
 			},
 		}
 	})
