@@ -87,6 +87,8 @@ func (rs RegionService) createAndRegistryHistory(ctx context.Context, region mod
 			return err
 		}
 
+		rs.SaveInRedis(ctx, region)
+
 		return err
 	}
 
@@ -154,14 +156,8 @@ func (rs RegionService) Fetch(ctx context.Context, regionId uuid.UUID) (model.Re
 		return model.Region{}, err
 	}
 
-	regionJSON, err := json.Marshal(value)
-	if err != nil {
-
-		return model.Region{}, fmt.Errorf("failed to marshal region: %w", err)
-	}
-
 	var region model.Region
-	err = json.Unmarshal(regionJSON, &region)
+	err = json.Unmarshal([]byte(value), &region)
 	if err != nil {
 
 		return model.Region{}, fmt.Errorf("failed to unmarshal into region: %w", err)

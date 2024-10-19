@@ -3,7 +3,9 @@ package processor
 import (
 	"context"
 
+	addressv1 "github.com/VanessaVallarini/address-api/pkg/api/proto/v1"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/geocode"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 	"github.com/google/uuid"
 	easyzap "github.com/lockp111/go-easyzap"
@@ -53,6 +55,7 @@ type SpentProcessor struct {
 	regionRetriever   RegionRetriever
 	ledgerManager     LedgerManager
 	bucket            BucketFetcher
+	addressApi        addressv1.AddressClient
 }
 
 func NewSpentProcessor(
@@ -62,7 +65,8 @@ func NewSpentProcessor(
 	slugRetriever SlugRetriever,
 	regionRetriever RegionRetriever,
 	ledgerManager LedgerManager,
-	bucket BucketFetcher) SpentProcessor {
+	bucket BucketFetcher,
+	addressApi addressv1.AddressClient) SpentProcessor {
 	return SpentProcessor{
 		spentManager:      spentManager,
 		campaignManager:   campaignManager,
@@ -71,6 +75,7 @@ func NewSpentProcessor(
 		regionRetriever:   regionRetriever,
 		ledgerManager:     ledgerManager,
 		bucket:            bucket,
+		addressApi:        addressApi,
 	}
 }
 
@@ -94,6 +99,12 @@ func (sp SpentProcessor) ProcessSpentEvent(ctx context.Context, spentEvent model
 		return err
 	}
 
+	address, err := sp.addressApi.GetAddressByIp(ctx, &addressv1.IpRequest{Ip: spentEvent.IP})
+	if err != nil {
+
+		return err
+	}
+
 	region, err := sp.fetchRegion(ctx, merchant.RegionId)
 	if err != nil {
 
@@ -107,9 +118,19 @@ func (sp SpentProcessor) ProcessSpentEvent(ctx context.Context, spentEvent model
 	}
 
 	spent, err := sp.spentManager.FetchByMerchantIdAndBucket(ctx, spentEvent.MerchantId, sp.bucket.CurrentBucket().Key)
-	if err != nil {
+	if err != nil && err != model.ErrNotFound {
 
 		return err
+	} else {
+		spent = model.Spent{
+			Id:               uuid.New(),
+			CampaignId:       campaign.Id,
+			MerchantId:       merchant.Id,
+			Bucket:           sp.bucket.CurrentBucket().Key,
+			TotalSpent:       0,
+			TotalClicks:      0,
+			TotalImpressions: 0,
+		}
 	}
 
 	shouldPerformSpent := sp.shouldPerformSpent(
@@ -120,7 +141,12 @@ func (sp SpentProcessor) ProcessSpentEvent(ctx context.Context, spentEvent model
 		campaign.Budget,
 		spent.TotalSpent,
 		slug.Cost,
-		region.Cost)
+		region.Cost,
+		address.Lat,
+		address.Lon,
+		region.Lat,
+		region.Long,
+	)
 	if !shouldPerformSpent {
 
 		return nil
@@ -129,6 +155,12 @@ func (sp SpentProcessor) ProcessSpentEvent(ctx context.Context, spentEvent model
 	howMuchShouldCharge, shouldRunOut := sp.howMuchShouldChargeAndShouldRunOut(campaign.Budget, spent.TotalSpent, slug.Cost, region.Cost)
 
 	spent.TotalSpent += howMuchShouldCharge
+	if spentEvent.EventType == string(model.Click) {
+		spent.TotalClicks++
+	} else {
+		spent.TotalImpressions++
+	}
+
 	err = sp.spentManager.UpsertAndRegsterLedger(ctx, spent, spentEvent, region.Name)
 	if err != nil {
 
@@ -195,10 +227,23 @@ func (sp SpentProcessor) shouldPerformSpent(
 	budget,
 	totalSpent,
 	slugCost,
-	regionCost float64) bool {
+	regionCost float64,
+	addressLat float64,
+	addressLon float64,
+	regionLat float64,
+	regionLong float64,
+) bool {
 	status := string(model.Active)
 	if campaignStatus != status || merchantStatus != status || slugStatus != status ||
 		regionStatus != status {
+		return false
+	}
+
+	if addressLat == 0 || addressLon == 0 || regionLat == 0 || regionLong == 0 {
+		return false
+	}
+
+	if geocode.IsWithinRegion(addressLat, addressLon, regionLat, regionLong) {
 		return false
 	}
 
@@ -206,7 +251,7 @@ func (sp SpentProcessor) shouldPerformSpent(
 		return true
 	}
 
-	return true
+	return false
 }
 
 func (sp SpentProcessor) howMuchShouldChargeAndShouldRunOut(budget, totalSpent, slugCost, regionCost float64) (float64, bool) {

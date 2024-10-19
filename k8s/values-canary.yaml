@@ -65,4 +65,11 @@ appConfigFile:
           ttl: 86400
         region:
           ttl: 86400
+      address-api:
+        name: ddress-api
+        url: address-api:80
+        timeout-millis: 100
+        keep-alive:
+          time-ms: 60000
+          timeout-ms: 10000
       time-location: "America/Sao_Paulo"

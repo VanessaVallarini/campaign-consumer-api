@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/api"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/client"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/config"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/dao"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/listener/handler"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/listener/processor"
-	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/client"
+	kafkaClient "github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/client"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/consumer"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/postgres"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/redis"
@@ -53,6 +54,7 @@ func main() {
 	redisClient.Ping(ctx)
 	slugRedisValidator := service.NewRedisValidator(redisClient, cfg.RedisConfig.SlugTTL)
 	regionRedisValidator := service.NewRedisValidator(redisClient, cfg.RedisConfig.RegionTTL)
+	addressApiClient := client.NewAddressClient(cfg.AddressApi)
 
 	// dao
 	pool := postgres.CreatePool(ctx, &cfg.Database)
@@ -79,7 +81,7 @@ func main() {
 	campaignService := service.NewCampaignService(campaignDao, campaignHistoryDao, spentService, bucketService, transactionManager)
 
 	// processor
-	spentProcessor := processor.NewSpentProcessor(spentService, campaignService, merchantService, slugService, regionService, ledgerServce, bucketService)
+	spentProcessor := processor.NewSpentProcessor(spentService, campaignService, merchantService, slugService, regionService, ledgerServce, bucketService, addressApiClient)
 
 	// handler
 	ownerHandler := handler.MakeOwnerEventHandler(ownerService)
@@ -89,12 +91,12 @@ func main() {
 	campaignHandler := handler.MakeCampaignEventHandler(campaignService)
 	spentHandler := handler.MakeSpentEventHandler(spentProcessor)
 
-	ownerSrClient := client.NewSchemaRegistry(cfg.KafkaOwner)
-	slugSrClient := client.NewSchemaRegistry(cfg.KafkaSlug)
-	regionSrClient := client.NewSchemaRegistry(cfg.KafkaRegion)
-	merchantSrClient := client.NewSchemaRegistry(cfg.KafkaMerchant)
-	campaignSrClient := client.NewSchemaRegistry(cfg.KafkaCampaign)
-	spentSrClient := client.NewSchemaRegistry(cfg.KafkaSpent)
+	ownerSrClient := kafkaClient.NewSchemaRegistry(cfg.KafkaOwner)
+	slugSrClient := kafkaClient.NewSchemaRegistry(cfg.KafkaSlug)
+	regionSrClient := kafkaClient.NewSchemaRegistry(cfg.KafkaRegion)
+	merchantSrClient := kafkaClient.NewSchemaRegistry(cfg.KafkaMerchant)
+	campaignSrClient := kafkaClient.NewSchemaRegistry(cfg.KafkaCampaign)
+	spentSrClient := kafkaClient.NewSchemaRegistry(cfg.KafkaSpent)
 
 	//consumer
 	ownerConsumer := consumer.NewConsumer(ctx, cfg.KafkaOwner, ownerSrClient, ownerHandler)

@@ -32,20 +32,14 @@ const allSpentFields = `
 `
 
 var upsertSpentQuery = `
-	INSERT INTO spent (id, campaign_id,merchant_id,  bucket, total_spent, total_clicks, total_impressions)
-	VALUES (
-		$1,
-		$2,
-		$3,
-		$4,
-		$5,
-		$6
-	)
-	ON CONFLICT (merchant_id, bucket) DO UPDATE
-	SET
-		total_spent = EXCLUDED.total_spent,
-		total_clicks = EXCLUDED.total_clicks,
-		total_impressions = EXCLUDED.total_impressions;
+	INSERT INTO spent 
+	(id, campaign_id, merchant_id,  bucket, total_spent, total_clicks, total_impressions)
+	VALUES ($1,$2,$3,$4,$5,$6,$7)
+	ON CONFLICT (merchant_id, bucket) 
+	DO update set 
+	total_spent = EXCLUDED.total_spent,
+	total_clicks = EXCLUDED.total_clicks,
+	total_impressions = EXCLUDED.total_impressions;
 `
 
 func (s SpentDao) Upsert(ctx context.Context, tx transaction.Transaction, spent model.Spent) error {
@@ -54,6 +48,7 @@ func (s SpentDao) Upsert(ctx context.Context, tx transaction.Transaction, spent 
 		upsertSpentQuery,
 		spent.Id,
 		spent.CampaignId,
+		spent.MerchantId,
 		spent.Bucket,
 		spent.TotalSpent,
 		spent.TotalClicks,
@@ -89,16 +84,3 @@ func (sd SpentDao) FetchByMerchantIdAndBucket(ctx context.Context, id uuid.UUID,
 
 	return spent, nil
 }
-
-var insertClickQuery = `
-	INSERT INTO spent (` + allSpentFields + `)
-	VALUES (
-		$1,
-		$2,
-		$3,
-		$4,
-		$5,
-		$6,
-		$7
-	);
-`

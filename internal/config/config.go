@@ -25,6 +25,7 @@ type Config struct {
 	KafkaCampaign KafkaConfig
 	KafkaSpent    KafkaConfig
 	RedisConfig   RedisConfig
+	AddressApi    ClientConfig
 }
 
 type DatabaseConfig struct {
@@ -73,6 +74,18 @@ type RedisConfig struct {
 	ROAddress string
 	SlugTTL   time.Duration
 	RegionTTL time.Duration
+}
+
+type ClientConfig struct {
+	Name          string
+	Url           string
+	TimeOutMillis int
+	KeepAlive     KeepAlive
+}
+
+type KeepAlive struct {
+	TimeMs    int
+	TimeoutMs int
 }
 
 var (
@@ -264,6 +277,15 @@ func GetConfig() Config {
 				ROAddress: viperCfg.GetString("redis.ro"),
 				SlugTTL:   viperCfg.GetDuration("redis.slug.ttl") * time.Second,
 				RegionTTL: viperCfg.GetDuration("redis.region.ttl") * time.Second,
+			},
+			AddressApi: ClientConfig{
+				Name:          viperCfg.GetString("address-api.name"),
+				Url:           viperCfg.GetString("address-api.url"),
+				TimeOutMillis: viperCfg.GetInt("address-api.timeout-millis"),
+				KeepAlive: KeepAlive{
+					TimeMs:    viperCfg.GetInt("address-api.keep-alive.time-ms"),
+					TimeoutMs: viperCfg.GetInt("address-api.keep-alive.timeout-ms"),
+				},
 			},
 		}
 	})

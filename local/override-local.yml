@@ -18,3 +18,5 @@ kafka:
 redis:
   rw: localhost:6379
   ro: localhost:6379
+address-api:
+  url: localhost:6565

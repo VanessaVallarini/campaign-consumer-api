@@ -87,6 +87,8 @@ func (ss SlugService) createAndRegistryHistory(ctx context.Context, slug model.S
 			return err
 		}
 
+		ss.SaveInRedis(ctx, slug)
+
 		return err
 	}
 
@@ -152,14 +154,8 @@ func (ss SlugService) Fetch(ctx context.Context, name string) (model.Slug, error
 		return model.Slug{}, err
 	}
 
-	slugJSON, err := json.Marshal(value)
-	if err != nil {
-
-		return model.Slug{}, fmt.Errorf("failed to marshal slug: %w", err)
-	}
-
 	var slug model.Slug
-	err = json.Unmarshal(slugJSON, &slug)
+	err = json.Unmarshal([]byte(value), &slug)
 	if err != nil {
 
 		return model.Slug{}, fmt.Errorf("failed to unmarshal into slug: %w", err)

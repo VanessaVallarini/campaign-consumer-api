@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	teste "github.com/VanessaVallarini/address-api/pkg/api/proto/v1"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/transaction"
 	"github.com/google/uuid"
@@ -38,7 +37,6 @@ type CampaignService struct {
 }
 
 func NewCampaignService(campaignDao CampaignDao, campaignHistoryDao CampaignHistoryDao, spentFetcher SpentFetcher, bucketFetcher BucketFetcher, tm TransactionManager) CampaignService {
-	teste.NewAddressClient(nil)
 	return CampaignService{
 		campaignDao:        campaignDao,
 		campaignHistoryDao: campaignHistoryDao,

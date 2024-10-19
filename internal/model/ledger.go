@@ -14,6 +14,7 @@ type Ledger struct {
 	SlugName   string    `json:"slug_name"`
 	RegionName string    `json:"region_name"`
 	UserId     uuid.UUID `json:"user_id"`
+	SessionId  uuid.UUID `json:"session_id"`
 	EventType  EventType `json:"event_type"`
 	Cost       float64   `json:"cost"`
 	Ip         string    `json:"ip"`

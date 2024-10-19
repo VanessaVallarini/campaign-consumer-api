@@ -27,6 +27,7 @@ const allLedgerFields = `
 	slug_name,
 	region_name,
 	user_id,
+	session_id,
 	event_type,
 	cost,
 	ip,
@@ -52,7 +53,8 @@ var createLedgerQuery = `
 		$11,
 		$12,
 		$13,
-		$14
+		$14,
+		$15
 	);
 `
 
@@ -67,6 +69,7 @@ func (ld LedgerDao) Create(ctx context.Context, tx transaction.Transaction, ledg
 		ledger.SlugName,
 		ledger.RegionName,
 		ledger.UserId,
+		ledger.SessionId,
 		ledger.EventType,
 		ledger.Cost,
 		ledger.Ip,
