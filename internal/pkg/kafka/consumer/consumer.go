@@ -11,6 +11,7 @@ import (
 	easyzap "github.com/lockp111/go-easyzap"
 
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/config"
+	"github.com/VanessaVallarini/campaign-consumer-api/internal/model"
 	"github.com/VanessaVallarini/campaign-consumer-api/internal/pkg/kafka/client"
 )
 
@@ -108,6 +109,10 @@ func (c Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama
 		select {
 		case message := <-claim.Messages():
 			if err := c.messageHandler(message, c.srClient, c.subject); err != nil {
+				if err == model.ErrInvalid || err == model.ErrNotFound || err == model.ErrUnprocessableEntity {
+					session.MarkMessage(message, "")
+					continue
+				}
 				return err
 			}
 			session.MarkMessage(message, "")

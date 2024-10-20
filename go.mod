@@ -11,6 +11,7 @@ require (
 	github.com/redis/go-redis/v9 v9.1.0
 	github.com/spf13/viper v1.18.2
 	golang.org/x/net v0.24.0
+	google.golang.org/grpc v1.60.1
 )
 
 require (
@@ -77,7 +78,6 @@ require (
 	golang.org/x/tools v0.17.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
-	google.golang.org/grpc v1.60.1 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 )
 

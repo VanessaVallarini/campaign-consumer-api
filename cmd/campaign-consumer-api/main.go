@@ -148,5 +148,4 @@ func main() {
 	case syscall.SIGTERM:
 		easyzap.Info(context.Background(), "received SIGTERM, stopping...")
 	}
-
 }
